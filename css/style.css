@@ -2553,6 +2553,40 @@ body::before {
   }
 }
 
+/* ----------------------------- Exam Review Solution ----------------------------- */
+.exam-review-solution {
+  margin-top: 16px;
+  padding: 20px;
+  background: #F8FFFE;
+  border: 1px solid rgba(6, 214, 160, 0.2);
+  border-radius: 12px;
+}
+
+.exam-review-solution .solution-header {
+  font-size: 15px;
+  font-weight: 700;
+  color: #06D6A0;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(6, 214, 160, 0.15);
+}
+
+.exam-review-solution .solution-text {
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* Timer warning state */
+.exam-timer.timer-warning .exam-timer-text {
+  color: #EF476F;
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* ----------------------------- Accessibility ----------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
