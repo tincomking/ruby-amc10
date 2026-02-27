@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruby's AMC10 Trainer - Mametchi Math Academy</title>
+  <meta name="description" content="Interactive AMC10 math training with Mametchi, your cute Tamagotchi tutor!">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+  <!-- App -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <span class="logo-icon">🎓</span>
+        <span class="logo-text">Ruby's AMC10 Trainer</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="countdown-container" id="countdown">
+        <div class="countdown-label" id="countdownLabel">AMC 10A Exam</div>
+        <div class="countdown-digits">
+          <div class="countdown-unit">
+            <span class="countdown-number" id="countdownDays">---</span>
+            <span class="countdown-desc">days</span>
+          </div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-unit">
+            <span class="countdown-number" id="countdownHours">--</span>
+            <span class="countdown-desc">hrs</span>
+          </div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-unit">
+            <span class="countdown-number" id="countdownMins">--</span>
+            <span class="countdown-desc">min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <!-- Welcome Screen -->
+    <div class="screen active" id="welcomeScreen">
+      <div class="welcome-card">
+        <div class="mametchi-container" id="welcomeMametchi">
+          <!-- Mametchi SVG inserted by JS -->
+        </div>
+        <div class="welcome-text">
+          <h1>Welcome, Ruby!</h1>
+          <p>I'm <strong>Mametchi</strong>, your math buddy! Let's get ready for the AMC 10 together. Pick a topic to start practicing, or let me choose one for you!</p>
+        </div>
+        <div class="topic-selector">
+          <button class="topic-btn" data-topic="algebra">
+            <span class="topic-icon">x</span>
+            <span class="topic-name">Algebra</span>
+          </button>
+          <button class="topic-btn" data-topic="geometry">
+            <span class="topic-icon">△</span>
+            <span class="topic-name">Geometry</span>
+          </button>
+          <button class="topic-btn" data-topic="number_theory">
+            <span class="topic-icon">#</span>
+            <span class="topic-name">Number Theory</span>
+          </button>
+          <button class="topic-btn" data-topic="combinatorics">
+            <span class="topic-icon">C</span>
+            <span class="topic-name">Combinatorics</span>
+          </button>
+          <button class="topic-btn topic-btn-auto" data-topic="auto">
+            <span class="topic-icon">★</span>
+            <span class="topic-name">Smart Pick</span>
+          </button>
+        </div>
+        <div class="daily-stats" id="dailyStats">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Problem Screen -->
+    <div class="screen" id="problemScreen">
+      <div class="problem-layout">
+        <!-- Mametchi + Dialog -->
+        <div class="mametchi-section">
+          <div class="mametchi-container" id="problemMametchi">
+            <!-- Mametchi SVG inserted by JS -->
+          </div>
+          <div class="dialog-bubble" id="dialogBubble">
+            <div class="dialog-text" id="dialogText"></div>
+          </div>
+        </div>
+
+        <!-- Problem Area -->
+        <div class="problem-card" id="problemCard">
+          <div class="problem-meta">
+            <span class="problem-topic" id="problemTopic"></span>
+            <span class="problem-difficulty" id="problemDifficulty"></span>
+            <span class="problem-counter" id="problemCounter"></span>
+          </div>
+          <div class="problem-text" id="problemText">
+            <!-- KaTeX rendered problem -->
+          </div>
+        </div>
+
+        <!-- Answer Area -->
+        <div class="answer-section" id="answerSection">
+          <div class="choices" id="choices">
+            <!-- Choice buttons inserted by JS -->
+          </div>
+          <div class="answer-actions">
+            <button class="btn btn-primary" id="submitBtn" disabled>Submit Answer</button>
+            <button class="btn btn-secondary" id="hintBtn">Hint</button>
+            <button class="btn btn-ghost" id="skipBtn">Skip</button>
+          </div>
+        </div>
+
+        <!-- Hint Area (hidden by default) -->
+        <div class="hint-card hidden" id="hintCard">
+          <div class="hint-label">💡 Hint</div>
+          <div class="hint-text" id="hintText"></div>
+        </div>
+
+        <!-- Solution Area (hidden by default) -->
+        <div class="solution-card hidden" id="solutionCard">
+          <div class="solution-header" id="solutionHeader"></div>
+          <div class="solution-text" id="solutionText"></div>
+          <button class="btn btn-primary" id="nextBtn">Next Problem</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Screen -->
+    <div class="screen" id="progressScreen">
+      <!-- TODO: Progress dashboard -->
+    </div>
+  </main>
+
+  <!-- Bottom Progress Bar -->
+  <footer class="footer">
+    <div class="progress-bar-container">
+      <div class="topic-progress">
+        <div class="topic-prog-item">
+          <span class="topic-prog-label">Algebra</span>
+          <div class="topic-prog-bar"><div class="topic-prog-fill" id="progAlgebra" style="width: 0%"></div></div>
+        </div>
+        <div class="topic-prog-item">
+          <span class="topic-prog-label">Geometry</span>
+          <div class="topic-prog-bar"><div class="topic-prog-fill" id="progGeometry" style="width: 0%"></div></div>
+        </div>
+        <div class="topic-prog-item">
+          <span class="topic-prog-label">Number Theory</span>
+          <div class="topic-prog-bar"><div class="topic-prog-fill" id="progNumberTheory" style="width: 0%"></div></div>
+        </div>
+        <div class="topic-prog-item">
+          <span class="topic-prog-label">Combinatorics</span>
+          <div class="topic-prog-bar"><div class="topic-prog-fill" id="progCombinatorics" style="width: 0%"></div></div>
+        </div>
+      </div>
+      <div class="session-stats">
+        <span id="statToday">Today: 0</span>
+        <span class="stat-sep">|</span>
+        <span id="statAccuracy">Accuracy: --%</span>
+        <span class="stat-sep">|</span>
+        <span id="statStreak">Streak: 0 🔥</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay hidden" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Mametchi is thinking...</div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/countdown.js"></script>
+  <script src="js/mametchi.js"></script>
+  <script src="js/problemBank.js"></script>
+  <script src="js/progress.js"></script>
+  <script src="js/problems.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
