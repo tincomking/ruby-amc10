@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ruby's AMC10 Trainer - Mametchi Math Academy</title>
-  <meta name="description" content="Interactive AMC10 math training with Mametchi, your cute Tamagotchi tutor!">
+  <title>Mametchi's Math Academy - AMC10 Trainer</title>
+  <meta name="description" content="Interactive AMC10 math training with Mametchi, your cute Tamagotchi tutor! Practice, take real exams, and track your progress.">
+  <meta name="theme-color" content="#1B2A4A">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 
   <!-- KaTeX -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -20,154 +21,514 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- Header -->
+
+  <!-- Floating decorative shapes (CSS-driven) -->
+  <div class="bg-decorations" aria-hidden="true">
+    <div class="bg-shape bg-shape-1"></div>
+    <div class="bg-shape bg-shape-2"></div>
+    <div class="bg-shape bg-shape-3"></div>
+    <div class="bg-shape bg-shape-4"></div>
+    <div class="bg-shape bg-shape-5"></div>
+    <div class="bg-shape bg-shape-6"></div>
+  </div>
+
+  <!-- ======================== HEADER ======================== -->
   <header class="header">
-    <div class="header-left">
-      <div class="logo">
-        <span class="logo-icon">🎓</span>
-        <span class="logo-text">Ruby's AMC10 Trainer</span>
+    <div class="header-inner">
+      <div class="header-left">
+        <a href="#" class="logo" onclick="return false;">
+          <div class="logo-mametchi-mini">
+            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-label="Mametchi">
+              <circle cx="16" cy="14" r="10" fill="#FFFACD"/>
+              <ellipse cx="10" cy="7" rx="4" ry="3" fill="#1B2A4A" transform="rotate(-15 10 7)"/>
+              <ellipse cx="22" cy="7" rx="4" ry="3" fill="#1B2A4A" transform="rotate(15 22 7)"/>
+              <ellipse cx="16" cy="5" rx="6" ry="2.5" fill="#1B2A4A"/>
+              <ellipse cx="12" cy="13" rx="2" ry="2.5" fill="#1B2A4A"/>
+              <ellipse cx="20" cy="13" rx="2" ry="2.5" fill="#1B2A4A"/>
+              <ellipse cx="12.5" cy="12" rx="0.8" ry="1" fill="white"/>
+              <ellipse cx="20.5" cy="12" rx="0.8" ry="1" fill="white"/>
+              <ellipse cx="9" cy="16" rx="2" ry="1.2" fill="#FFB6C1" opacity="0.6"/>
+              <ellipse cx="23" cy="16" rx="2" ry="1.2" fill="#FFB6C1" opacity="0.6"/>
+              <path d="M13 18 Q16 21 19 18" stroke="#1B2A4A" stroke-width="1" fill="none" stroke-linecap="round"/>
+              <ellipse cx="12" cy="28" rx="4" ry="2" fill="#1B2A4A"/>
+              <ellipse cx="20" cy="28" rx="4" ry="2" fill="#1B2A4A"/>
+            </svg>
+          </div>
+          <span class="logo-text">Mametchi's Math Academy</span>
+        </a>
       </div>
-    </div>
-    <div class="header-right">
-      <div class="countdown-container" id="countdown">
-        <div class="countdown-label" id="countdownLabel">AMC 10A Exam</div>
-        <div class="countdown-digits">
-          <div class="countdown-unit">
-            <span class="countdown-number" id="countdownDays">---</span>
-            <span class="countdown-desc">days</span>
-          </div>
-          <div class="countdown-sep">:</div>
-          <div class="countdown-unit">
-            <span class="countdown-number" id="countdownHours">--</span>
-            <span class="countdown-desc">hrs</span>
-          </div>
-          <div class="countdown-sep">:</div>
-          <div class="countdown-unit">
-            <span class="countdown-number" id="countdownMins">--</span>
-            <span class="countdown-desc">min</span>
+
+      <div class="header-center">
+        <div class="streak-indicator" id="streakIndicator">
+          <span class="streak-flame">&#x1F525;</span>
+          <span class="streak-count" id="headerStreak">0</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="countdown-container" id="countdown">
+          <div class="countdown-label" id="countdownLabel">AMC 10A Exam</div>
+          <div class="countdown-digits">
+            <div class="countdown-unit">
+              <span class="countdown-number" id="countdownDays">---</span>
+              <span class="countdown-desc">days</span>
+            </div>
+            <div class="countdown-sep">:</div>
+            <div class="countdown-unit">
+              <span class="countdown-number" id="countdownHours">--</span>
+              <span class="countdown-desc">hrs</span>
+            </div>
+            <div class="countdown-sep">:</div>
+            <div class="countdown-unit">
+              <span class="countdown-number" id="countdownMins">--</span>
+              <span class="countdown-desc">min</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
+  <!-- ======================== NAVIGATION TABS ======================== -->
+  <nav class="tab-nav">
+    <div class="tab-nav-inner">
+      <button class="tab-btn active" data-tab="practice" id="tabPractice">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span class="tab-label">Practice</span>
+      </button>
+      <button class="tab-btn" data-tab="exams" id="tabExams">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="tab-label">Real Exams</span>
+      </button>
+      <button class="tab-btn" data-tab="progress" id="tabProgress">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        <span class="tab-label">My Progress</span>
+      </button>
+      <div class="tab-indicator" id="tabIndicator"></div>
+    </div>
+  </nav>
+
+  <!-- ======================== MAIN CONTENT ======================== -->
   <main class="main">
-    <!-- Welcome Screen -->
-    <div class="screen active" id="welcomeScreen">
-      <div class="welcome-card">
-        <div class="mametchi-container" id="welcomeMametchi">
-          <!-- Mametchi SVG inserted by JS -->
-        </div>
-        <div class="welcome-text">
-          <h1>Welcome, Ruby!</h1>
-          <p>I'm <strong>Mametchi</strong>, your math buddy! Let's get ready for the AMC 10 together. Pick a topic to start practicing, or let me choose one for you!</p>
-        </div>
-        <div class="topic-selector">
-          <button class="topic-btn" data-topic="algebra">
-            <span class="topic-icon">x</span>
-            <span class="topic-name">Algebra</span>
-          </button>
-          <button class="topic-btn" data-topic="geometry">
-            <span class="topic-icon">△</span>
-            <span class="topic-name">Geometry</span>
-          </button>
-          <button class="topic-btn" data-topic="number_theory">
-            <span class="topic-icon">#</span>
-            <span class="topic-name">Number Theory</span>
-          </button>
-          <button class="topic-btn" data-topic="combinatorics">
-            <span class="topic-icon">C</span>
-            <span class="topic-name">Combinatorics</span>
-          </button>
-          <button class="topic-btn topic-btn-auto" data-topic="auto">
-            <span class="topic-icon">★</span>
-            <span class="topic-name">Smart Pick</span>
-          </button>
-        </div>
-        <div class="daily-stats" id="dailyStats">
-          <!-- Filled by JS -->
+
+    <!-- ==================== PRACTICE TAB ==================== -->
+    <section class="tab-panel active" id="panelPractice" data-panel="practice">
+
+      <!-- Welcome Screen -->
+      <div class="screen active" id="welcomeScreen">
+        <div class="welcome-card">
+          <div class="welcome-hero">
+            <div class="mametchi-container mametchi-welcome" id="welcomeMametchi">
+              <!-- Mametchi SVG inserted by JS -->
+            </div>
+            <div class="welcome-text">
+              <h1>Welcome, Ruby!</h1>
+              <p>I'm <strong>Mametchi</strong>, your math buddy! Let's get ready for the AMC 10 together. Pick a topic to start practicing, or let me choose one for you!</p>
+            </div>
+          </div>
+
+          <div class="topic-selector">
+            <button class="topic-btn" data-topic="algebra">
+              <span class="topic-icon">
+                <svg viewBox="0 0 32 32" fill="none"><text x="6" y="24" font-size="22" font-weight="bold" fill="currentColor">x</text></svg>
+              </span>
+              <span class="topic-name">Algebra</span>
+            </button>
+            <button class="topic-btn" data-topic="geometry">
+              <span class="topic-icon">
+                <svg viewBox="0 0 32 32" fill="none"><polygon points="16,4 28,28 4,28" stroke="currentColor" stroke-width="2.5" fill="none"/></svg>
+              </span>
+              <span class="topic-name">Geometry</span>
+            </button>
+            <button class="topic-btn" data-topic="number_theory">
+              <span class="topic-icon">
+                <svg viewBox="0 0 32 32" fill="none"><text x="6" y="24" font-size="20" font-weight="bold" fill="currentColor">#</text></svg>
+              </span>
+              <span class="topic-name">Number Theory</span>
+            </button>
+            <button class="topic-btn" data-topic="combinatorics">
+              <span class="topic-icon">
+                <svg viewBox="0 0 32 32" fill="none"><text x="4" y="23" font-size="18" font-weight="bold" fill="currentColor">C</text><text x="16" y="14" font-size="10" fill="currentColor">n</text><text x="16" y="28" font-size="10" fill="currentColor">k</text></svg>
+              </span>
+              <span class="topic-name">Combinatorics</span>
+            </button>
+            <button class="topic-btn topic-btn-auto" data-topic="auto">
+              <span class="topic-icon topic-icon-star">
+                <svg viewBox="0 0 32 32" fill="none"><polygon points="16,2 20,12 30,12 22,18 25,28 16,22 7,28 10,18 2,12 12,12" fill="currentColor"/></svg>
+              </span>
+              <span class="topic-name">Smart Pick</span>
+            </button>
+          </div>
+
+          <div class="daily-stats" id="dailyStats">
+            <!-- Filled by JS -->
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Problem Screen -->
-    <div class="screen" id="problemScreen">
-      <div class="problem-layout">
-        <!-- Mametchi + Dialog -->
-        <div class="mametchi-section">
-          <div class="mametchi-container" id="problemMametchi">
-            <!-- Mametchi SVG inserted by JS -->
-          </div>
-          <div class="dialog-bubble" id="dialogBubble">
-            <div class="dialog-text" id="dialogText"></div>
-          </div>
-        </div>
+      <!-- Problem Screen -->
+      <div class="screen" id="problemScreen">
+        <div class="problem-layout">
 
-        <!-- Problem Area -->
-        <div class="problem-card" id="problemCard">
-          <div class="problem-meta">
-            <span class="problem-topic" id="problemTopic"></span>
-            <span class="problem-difficulty" id="problemDifficulty"></span>
-            <span class="problem-counter" id="problemCounter"></span>
-          </div>
-          <div class="problem-text" id="problemText">
-            <!-- KaTeX rendered problem -->
-          </div>
-        </div>
+          <!-- Back to topics -->
+          <button class="back-btn" id="backToTopics" title="Back to topics">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <span>Topics</span>
+          </button>
 
-        <!-- Answer Area -->
-        <div class="answer-section" id="answerSection">
-          <div class="choices" id="choices">
-            <!-- Choice buttons inserted by JS -->
+          <!-- Mametchi + Dialog -->
+          <div class="mametchi-section">
+            <div class="mametchi-container" id="problemMametchi">
+              <!-- Mametchi SVG inserted by JS -->
+            </div>
+            <div class="dialog-bubble" id="dialogBubble">
+              <div class="dialog-text" id="dialogText"></div>
+            </div>
           </div>
-          <div class="answer-actions">
-            <button class="btn btn-primary" id="submitBtn" disabled>Submit Answer</button>
-            <button class="btn btn-secondary" id="hintBtn">Hint</button>
-            <button class="btn btn-ghost" id="skipBtn">Skip</button>
+
+          <!-- Problem Card -->
+          <div class="problem-card" id="problemCard">
+            <div class="problem-meta">
+              <span class="problem-topic" id="problemTopic"></span>
+              <span class="problem-difficulty" id="problemDifficulty"></span>
+              <span class="problem-counter" id="problemCounter"></span>
+            </div>
+            <div class="problem-text" id="problemText">
+              <!-- KaTeX rendered problem -->
+            </div>
           </div>
-        </div>
 
-        <!-- Hint Area (hidden by default) -->
-        <div class="hint-card hidden" id="hintCard">
-          <div class="hint-label">💡 Hint</div>
-          <div class="hint-text" id="hintText"></div>
-        </div>
+          <!-- Answer Area -->
+          <div class="answer-section" id="answerSection">
+            <div class="choices" id="choices">
+              <!-- Choice buttons inserted by JS -->
+            </div>
+            <div class="answer-actions">
+              <button class="btn btn-primary" id="submitBtn" disabled>Submit Answer</button>
+              <button class="btn btn-secondary" id="hintBtn">Hint</button>
+              <button class="btn btn-ghost" id="skipBtn">Skip</button>
+            </div>
+          </div>
 
-        <!-- Solution Area (hidden by default) -->
-        <div class="solution-card hidden" id="solutionCard">
-          <div class="solution-header" id="solutionHeader"></div>
-          <div class="solution-text" id="solutionText"></div>
-          <button class="btn btn-primary" id="nextBtn">Next Problem</button>
+          <!-- Hint Area (hidden by default) -->
+          <div class="hint-card hidden" id="hintCard">
+            <div class="hint-label">
+              <svg class="hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+              Hint
+            </div>
+            <div class="hint-text" id="hintText"></div>
+          </div>
+
+          <!-- Solution Card (hidden by default) -->
+          <div class="solution-card hidden" id="solutionCard">
+            <div class="solution-header" id="solutionHeader"></div>
+
+            <!-- Step-by-step container -->
+            <div class="solution-steps" id="solutionSteps">
+              <!-- Steps injected by JS for animated walkthrough -->
+            </div>
+
+            <!-- Fallback plain solution text -->
+            <div class="solution-text" id="solutionText"></div>
+
+            <div class="solution-actions">
+              <button class="btn btn-primary" id="nextBtn">Next Problem</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Progress Screen -->
-    <div class="screen" id="progressScreen">
-      <!-- TODO: Progress dashboard -->
-    </div>
+    <!-- ==================== REAL EXAMS TAB ==================== -->
+    <section class="tab-panel" id="panelExams" data-panel="exams">
+
+      <!-- Exam Selector Screen -->
+      <div class="screen active" id="examSelectScreen">
+        <div class="exam-selector">
+          <div class="exam-selector-header">
+            <h2>Real AMC 10 Exams</h2>
+            <p>Take actual past AMC 10 exams under timed conditions. 25 problems, 75 minutes.</p>
+          </div>
+
+          <div class="exam-selector-controls">
+            <div class="exam-control-group">
+              <label class="exam-label" for="examYear">Year</label>
+              <select class="exam-select" id="examYear">
+                <option value="">Select Year</option>
+                <!-- Years generated by JS, 2000-2025 -->
+              </select>
+            </div>
+            <div class="exam-control-group">
+              <label class="exam-label" for="examVariant">Test</label>
+              <select class="exam-select" id="examVariant">
+                <option value="">Select Test</option>
+                <option value="A">AMC 10A</option>
+                <option value="B">AMC 10B</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Exam Preview Card -->
+          <div class="exam-preview-card hidden" id="examPreviewCard">
+            <div class="exam-preview-badge">AMC 10</div>
+            <div class="exam-preview-info">
+              <h3 id="examPreviewTitle">2024 AMC 10A</h3>
+              <div class="exam-preview-details">
+                <div class="exam-detail">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span>75 minutes</span>
+                </div>
+                <div class="exam-detail">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <span>25 problems</span>
+                </div>
+                <div class="exam-detail">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <span>150 points max</span>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-lg" id="startExamBtn">Start Exam</button>
+          </div>
+
+          <!-- Past Exam Scores -->
+          <div class="exam-history" id="examHistory">
+            <h3>Past Scores</h3>
+            <div class="exam-history-list" id="examHistoryList">
+              <!-- Filled by JS -->
+              <div class="exam-history-empty">No exams taken yet. Pick one above to start!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exam In-Progress Screen -->
+      <div class="screen" id="examActiveScreen">
+        <div class="exam-layout">
+
+          <!-- Exam Top Bar -->
+          <div class="exam-top-bar">
+            <div class="exam-top-left">
+              <button class="btn btn-ghost btn-sm" id="examQuitBtn">Quit</button>
+              <span class="exam-title-bar" id="examTitleBar">2024 AMC 10A</span>
+            </div>
+            <div class="exam-top-center">
+              <div class="exam-progress-bar">
+                <div class="exam-progress-fill" id="examProgressFill" style="width: 0%"></div>
+              </div>
+              <span class="exam-progress-text" id="examProgressText">0 / 25</span>
+            </div>
+            <div class="exam-top-right">
+              <div class="exam-timer" id="examTimer">
+                <svg class="exam-timer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="exam-timer-text" id="examTimerText">75:00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exam Problem Area -->
+          <div class="exam-problem-area">
+            <div class="exam-problem-number" id="examProblemNumber">Problem 1</div>
+            <div class="problem-card">
+              <div class="problem-text" id="examProblemText">
+                <!-- KaTeX rendered problem -->
+              </div>
+            </div>
+
+            <div class="answer-section">
+              <div class="choices" id="examChoices">
+                <!-- Choice buttons inserted by JS -->
+              </div>
+              <div class="exam-nav-actions">
+                <button class="btn btn-ghost" id="examPrevBtn" disabled>Previous</button>
+                <div class="exam-problem-dots" id="examProblemDots">
+                  <!-- 25 problem dots generated by JS -->
+                </div>
+                <button class="btn btn-primary" id="examNextBtn">Next</button>
+              </div>
+              <div class="exam-submit-section hidden" id="examSubmitSection">
+                <button class="btn btn-primary btn-lg" id="examSubmitAllBtn">Submit Exam</button>
+                <span class="exam-unanswered" id="examUnanswered"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exam Results Screen -->
+      <div class="screen" id="examResultsScreen">
+        <div class="exam-results">
+          <div class="exam-results-header">
+            <div class="mametchi-container" id="examResultsMametchi">
+              <!-- Mametchi SVG inserted by JS -->
+            </div>
+            <h2 id="examResultsTitle">Exam Complete!</h2>
+            <p class="exam-results-subtitle" id="examResultsSubtitle">2024 AMC 10A</p>
+          </div>
+
+          <div class="exam-score-card">
+            <div class="exam-score-big" id="examScoreBig">0</div>
+            <div class="exam-score-label">out of 150</div>
+            <div class="exam-score-breakdown">
+              <div class="exam-score-stat">
+                <span class="exam-score-stat-val" id="examCorrectCount">0</span>
+                <span class="exam-score-stat-label">Correct</span>
+              </div>
+              <div class="exam-score-stat">
+                <span class="exam-score-stat-val" id="examWrongCount">0</span>
+                <span class="exam-score-stat-label">Wrong</span>
+              </div>
+              <div class="exam-score-stat">
+                <span class="exam-score-stat-val" id="examBlankCount">0</span>
+                <span class="exam-score-stat-label">Blank</span>
+              </div>
+              <div class="exam-score-stat">
+                <span class="exam-score-stat-val" id="examTimeUsed">0:00</span>
+                <span class="exam-score-stat-label">Time</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="exam-results-actions">
+            <button class="btn btn-primary" id="examReviewBtn">Review Answers</button>
+            <button class="btn btn-secondary" id="examRetakeBtn">Take Another Exam</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== MY PROGRESS TAB ==================== -->
+    <section class="tab-panel" id="panelProgress" data-panel="progress">
+      <div class="screen active" id="progressScreen">
+        <div class="progress-dashboard">
+          <div class="progress-header-card">
+            <div class="mametchi-container" id="progressMametchi">
+              <!-- Mametchi SVG inserted by JS -->
+            </div>
+            <div class="progress-header-info">
+              <h2>Ruby's Progress</h2>
+              <p class="progress-subtitle" id="progressSubtitle">Keep going! You're doing great.</p>
+            </div>
+          </div>
+
+          <!-- Overall Stats -->
+          <div class="progress-stats-grid" id="progressStatsGrid">
+            <div class="progress-stat-card">
+              <div class="progress-stat-value" id="progTotalProblems">0</div>
+              <div class="progress-stat-label">Total Problems</div>
+            </div>
+            <div class="progress-stat-card">
+              <div class="progress-stat-value" id="progOverallAccuracy">--%</div>
+              <div class="progress-stat-label">Accuracy</div>
+            </div>
+            <div class="progress-stat-card">
+              <div class="progress-stat-value" id="progBestStreak">0</div>
+              <div class="progress-stat-label">Best Streak</div>
+            </div>
+            <div class="progress-stat-card">
+              <div class="progress-stat-value" id="progDaysActive">0</div>
+              <div class="progress-stat-label">Days Active</div>
+            </div>
+          </div>
+
+          <!-- Topic Mastery -->
+          <div class="progress-mastery-card">
+            <h3>Topic Mastery</h3>
+            <div class="mastery-list">
+              <div class="mastery-item">
+                <div class="mastery-label">
+                  <span class="mastery-dot mastery-dot-algebra"></span>
+                  Algebra
+                </div>
+                <div class="mastery-bar"><div class="mastery-fill mastery-fill-algebra" id="progAlgebra" style="width: 0%"></div></div>
+                <span class="mastery-pct" id="progAlgebraPct">0%</span>
+              </div>
+              <div class="mastery-item">
+                <div class="mastery-label">
+                  <span class="mastery-dot mastery-dot-geometry"></span>
+                  Geometry
+                </div>
+                <div class="mastery-bar"><div class="mastery-fill mastery-fill-geometry" id="progGeometry" style="width: 0%"></div></div>
+                <span class="mastery-pct" id="progGeometryPct">0%</span>
+              </div>
+              <div class="mastery-item">
+                <div class="mastery-label">
+                  <span class="mastery-dot mastery-dot-number-theory"></span>
+                  Number Theory
+                </div>
+                <div class="mastery-bar"><div class="mastery-fill mastery-fill-number-theory" id="progNumberTheory" style="width: 0%"></div></div>
+                <span class="mastery-pct" id="progNumberTheoryPct">0%</span>
+              </div>
+              <div class="mastery-item">
+                <div class="mastery-label">
+                  <span class="mastery-dot mastery-dot-combinatorics"></span>
+                  Combinatorics
+                </div>
+                <div class="mastery-bar"><div class="mastery-fill mastery-fill-combinatorics" id="progCombinatorics" style="width: 0%"></div></div>
+                <span class="mastery-pct" id="progCombinatoricsPct">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Activity (placeholder for chart) -->
+          <div class="progress-activity-card">
+            <h3>This Week</h3>
+            <div class="activity-bars" id="activityBars">
+              <div class="activity-day">
+                <div class="activity-bar-track"><div class="activity-bar-fill" data-day="mon"></div></div>
+                <span class="activity-label">M</span>
+              </div>
+              <div class="activity-day">
+                <div class="activity-bar-track"><div class="activity-bar-fill" data-day="tue"></div></div>
+                <span class="activity-label">T</span>
+              </div>
+              <div class="activity-day">
+                <div class="activity-bar-track"><div class="activity-bar-fill" data-day="wed"></div></div>
+                <span class="activity-label">W</span>
+              </div>
+              <div class="activity-day">
+                <div class="activity-bar-track"><div class="activity-bar-fill" data-day="thu"></div></div>
+                <span class="activity-label">T</span>
+              </div>
+              <div class="activity-day">
+                <div class="activity-bar-track"><div class="activity-bar-fill" data-day="fri"></div></div>
+                <span class="activity-label">F</span>
+              </div>
+              <div class="activity-day">
+                <div class="activity-bar-track"><div class="activity-bar-fill" data-day="sat"></div></div>
+                <span class="activity-label">S</span>
+              </div>
+              <div class="activity-day">
+                <div class="activity-bar-track"><div class="activity-bar-fill" data-day="sun"></div></div>
+                <span class="activity-label">S</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
-  <!-- Bottom Progress Bar -->
+  <!-- ======================== FOOTER ======================== -->
   <footer class="footer">
-    <div class="progress-bar-container">
+    <div class="footer-inner">
       <div class="topic-progress">
         <div class="topic-prog-item">
           <span class="topic-prog-label">Algebra</span>
-          <div class="topic-prog-bar"><div class="topic-prog-fill" id="progAlgebra" style="width: 0%"></div></div>
+          <div class="topic-prog-bar"><div class="topic-prog-fill topic-prog-fill-algebra" id="footProgAlgebra" style="width: 0%"></div></div>
         </div>
         <div class="topic-prog-item">
           <span class="topic-prog-label">Geometry</span>
-          <div class="topic-prog-bar"><div class="topic-prog-fill" id="progGeometry" style="width: 0%"></div></div>
+          <div class="topic-prog-bar"><div class="topic-prog-fill topic-prog-fill-geometry" id="footProgGeometry" style="width: 0%"></div></div>
         </div>
         <div class="topic-prog-item">
           <span class="topic-prog-label">Number Theory</span>
-          <div class="topic-prog-bar"><div class="topic-prog-fill" id="progNumberTheory" style="width: 0%"></div></div>
+          <div class="topic-prog-bar"><div class="topic-prog-fill topic-prog-fill-number-theory" id="footProgNumberTheory" style="width: 0%"></div></div>
         </div>
         <div class="topic-prog-item">
           <span class="topic-prog-label">Combinatorics</span>
-          <div class="topic-prog-bar"><div class="topic-prog-fill" id="progCombinatorics" style="width: 0%"></div></div>
+          <div class="topic-prog-bar"><div class="topic-prog-fill topic-prog-fill-combinatorics" id="footProgCombinatorics" style="width: 0%"></div></div>
         </div>
       </div>
       <div class="session-stats">
@@ -175,24 +536,48 @@
         <span class="stat-sep">|</span>
         <span id="statAccuracy">Accuracy: --%</span>
         <span class="stat-sep">|</span>
-        <span id="statStreak">Streak: 0 🔥</span>
+        <span id="statStreak">Streak: 0</span>
       </div>
     </div>
   </footer>
 
-  <!-- Loading overlay -->
+  <!-- ======================== LOADING OVERLAY ======================== -->
   <div class="loading-overlay hidden" id="loadingOverlay">
-    <div class="loading-spinner"></div>
+    <div class="loading-mametchi">
+      <div class="loading-bounce">
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="40" cy="48" rx="22" ry="18" fill="#FFFACD"/>
+          <circle cx="40" cy="28" r="18" fill="#FFFACD"/>
+          <ellipse cx="28" cy="15" rx="7" ry="5" fill="#1B2A4A" transform="rotate(-15 28 15)"/>
+          <ellipse cx="52" cy="15" rx="7" ry="5" fill="#1B2A4A" transform="rotate(15 52 15)"/>
+          <ellipse cx="40" cy="11" rx="11" ry="4" fill="#1B2A4A"/>
+          <ellipse cx="34" cy="26" rx="3" ry="4" fill="#1B2A4A"/>
+          <ellipse cx="46" cy="26" rx="3" ry="4" fill="#1B2A4A"/>
+          <ellipse cx="35" cy="24.5" rx="1.2" ry="1.5" fill="white"/>
+          <ellipse cx="47" cy="24.5" rx="1.2" ry="1.5" fill="white"/>
+          <ellipse cx="30" cy="33" rx="3.5" ry="2" fill="#FFB6C1" opacity="0.5"/>
+          <ellipse cx="50" cy="33" rx="3.5" ry="2" fill="#FFB6C1" opacity="0.5"/>
+          <path d="M36 35 Q40 39 44 35" stroke="#1B2A4A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="34" cy="64" rx="7" ry="3.5" fill="#1B2A4A"/>
+          <ellipse cx="46" cy="64" rx="7" ry="3.5" fill="#1B2A4A"/>
+        </svg>
+      </div>
+    </div>
     <div class="loading-text">Mametchi is thinking...</div>
+    <div class="loading-dots">
+      <span></span><span></span><span></span>
+    </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- ======================== SCRIPTS ======================== -->
   <script src="js/countdown.js"></script>
   <script src="js/mametchi.js"></script>
   <script src="js/problemBank.js"></script>
   <script src="js/progress.js"></script>
   <script src="js/problems.js"></script>
   <script src="js/ai.js"></script>
+  <script src="js/examMode.js"></script>
   <script src="js/app.js"></script>
+
 </body>
 </html>
