@@ -756,10 +756,10 @@ body::before {
   gap: var(--space-lg);
 }
 
-/* Two-column layout: problem left, whiteboard right */
+/* Two-column layout: problem+solution left, whiteboard right */
 .problem-columns {
   display: grid;
-  grid-template-columns: 5fr 7fr;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-lg);
   align-items: start;
 }
@@ -775,6 +775,7 @@ body::before {
   position: sticky;
   top: 110px;
   min-width: 0;
+  max-height: calc(100vh - 120px);
 }
 
 /* ----------------------------- Mametchi Section ----------------------------- */
@@ -2581,7 +2582,7 @@ body::before {
   }
 
   .problem-columns {
-    grid-template-columns: 5fr 7fr;
+    grid-template-columns: 1fr 1fr;
     gap: var(--space-md);
   }
 

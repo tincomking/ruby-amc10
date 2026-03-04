@@ -52,13 +52,14 @@ var Whiteboard = (function() {
 
   function resizeCanvas() {
     if (!canvas || !wrapEl) return;
-    var rect = canvas.parentElement.getBoundingClientRect();
-    var w = rect.width || canvas.parentElement.offsetWidth || 300;
-    // Let CSS control height via calc(100vh - 220px), read computed value
-    var computedH = parseFloat(window.getComputedStyle(canvas).height) || 500;
-    canvas.style.width = w + 'px';
-    canvas.width = w * dpr;
-    canvas.height = computedH * dpr;
+    // Reset inline width so CSS width:100% takes effect, then read actual rendered size
+    canvas.style.width = '';
+    var rect = canvas.getBoundingClientRect();
+    var w = rect.width;
+    var h = rect.height;
+    if (w < 10 || h < 10) return; // not visible yet
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     redrawAll();
   }

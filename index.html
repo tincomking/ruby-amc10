@@ -186,10 +186,10 @@
             </div>
           </div>
 
-          <!-- Two-column: Left (problem) + Right (whiteboard) -->
+          <!-- Two-column: Left (problem+solution) + Right (whiteboard) -->
           <div class="problem-columns">
 
-            <!-- Left Column: Problem + Answers -->
+            <!-- Left Column: Problem + Answers + Solution -->
             <div class="problem-col-left">
               <!-- Problem Card -->
               <div class="problem-card" id="problemCard">
@@ -198,16 +198,12 @@
                   <span class="problem-difficulty" id="problemDifficulty"></span>
                   <span class="problem-counter" id="problemCounter"></span>
                 </div>
-                <div class="problem-text" id="problemText">
-                  <!-- KaTeX rendered problem -->
-                </div>
+                <div class="problem-text" id="problemText"></div>
               </div>
 
               <!-- Answer Area -->
               <div class="answer-section" id="answerSection">
-                <div class="choices" id="choices">
-                  <!-- Choice buttons inserted by JS -->
-                </div>
+                <div class="choices" id="choices"></div>
                 <div class="answer-actions">
                   <button class="btn btn-primary" id="submitBtn" disabled>Submit Answer</button>
                   <button class="btn btn-secondary" id="hintBtn">Hint</button>
@@ -222,6 +218,16 @@
                   Hint
                 </div>
                 <div class="hint-text" id="hintText"></div>
+              </div>
+
+              <!-- Solution Card (in left column, below answers) -->
+              <div class="solution-card hidden" id="solutionCard">
+                <div class="solution-header" id="solutionHeader"></div>
+                <div class="solution-steps" id="solutionSteps"></div>
+                <div class="solution-text" id="solutionText"></div>
+                <div class="solution-actions">
+                  <button class="btn btn-primary" id="nextBtn">Next Problem</button>
+                </div>
               </div>
             </div>
 
@@ -255,23 +261,6 @@
             </div>
 
           </div><!-- /problem-columns -->
-
-          <!-- Solution Card (full width, below columns) -->
-          <div class="solution-card hidden" id="solutionCard">
-            <div class="solution-header" id="solutionHeader"></div>
-
-            <!-- Step-by-step container -->
-            <div class="solution-steps" id="solutionSteps">
-              <!-- Steps injected by JS for animated walkthrough -->
-            </div>
-
-            <!-- Fallback plain solution text -->
-            <div class="solution-text" id="solutionText"></div>
-
-            <div class="solution-actions">
-              <button class="btn btn-primary" id="nextBtn">Next Problem</button>
-            </div>
-          </div>
         </div>
       </div>
     </section>
