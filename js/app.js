@@ -469,7 +469,18 @@
     var hintBtn = $('hintBtn');
     if (hintBtn) hintBtn.disabled = true;
 
+    // Capture points before recording to calculate delta
+    var pointsBefore = (state.progress.points || 0);
+    var wasCheckedIn = state.progress.lastCheckInDate === new Date().toISOString().slice(0, 10);
+
     recordProblem(state.progress, problem.topic, problem.subtopic, problem.difficulty, isCorrect, timeSpent, problem.problem);
+
+    // Show floating points animation
+    var pointsDelta = (state.progress.points || 0) - pointsBefore;
+    var breakdown = [];
+    if (!wasCheckedIn) breakdown.push('+2 check-in');
+    breakdown.push(isCorrect ? '+10 correct' : '+2 attempt');
+    showPointsAnimation(pointsDelta, breakdown);
 
     if (isCorrect) {
       handleCorrect(problem);
@@ -1310,11 +1321,14 @@
     var statsEl = $('dailyStats');
     if (!statsEl) return;
     var stats = getTodayStats(state.progress);
+    var pts = (state.progress && state.progress.points) || 0;
+    var today = new Date().toISOString().slice(0, 10);
+    var checkedIn = state.progress && state.progress.lastCheckInDate === today;
     statsEl.innerHTML =
       '<div class="daily-stat"><div class="daily-stat-value">' + stats.problems + '</div><div class="daily-stat-label">Problems Today</div></div>' +
       '<div class="daily-stat"><div class="daily-stat-value">' + stats.accuracy + '%</div><div class="daily-stat-label">Accuracy</div></div>' +
-      '<div class="daily-stat"><div class="daily-stat-value">' + stats.streak + '</div><div class="daily-stat-label">Current Streak</div></div>' +
-      '<div class="daily-stat"><div class="daily-stat-value">' + stats.goal + '</div><div class="daily-stat-label">Daily Goal</div></div>';
+      '<div class="daily-stat daily-stat-points"><div class="daily-stat-value">' + pts + ' &#x2B50;</div><div class="daily-stat-label">Points</div></div>' +
+      '<div class="daily-stat"><div class="daily-stat-value">' + (checkedIn ? '&#x2705;' : '&#x2B1C;') + '</div><div class="daily-stat-label">' + (checkedIn ? 'Checked In!' : 'Check In') + '</div></div>';
 
     // Also update header streak
     var headerStreak = $('headerStreak');
@@ -1364,44 +1378,74 @@
     var pts = (state.progress && state.progress.points) || 0;
     var el = $('headerPoints');
     if (el) el.textContent = pts;
+  }
 
-    // Update check-in indicator
-    var today = new Date().toISOString().slice(0, 10);
-    var checkedIn = state.progress && state.progress.lastCheckInDate === today;
-    var checkInEl = $('checkInStatus');
-    if (checkInEl) {
-      checkInEl.textContent = checkedIn ? 'Checked in today!' : 'Do a problem to check in';
-      checkInEl.className = 'checkin-status' + (checkedIn ? ' checked' : '');
-    }
+  function showPointsAnimation(delta, breakdown) {
+    var anchor = $('pointsIndicator');
+    if (!anchor || delta <= 0) return;
+
+    var popup = document.createElement('div');
+    popup.className = 'points-popup';
+    popup.innerHTML = '<div class="points-popup-total">+' + delta + '</div>' +
+      '<div class="points-popup-breakdown">' + breakdown.join(' &bull; ') + '</div>';
+
+    anchor.style.position = 'relative';
+    anchor.appendChild(popup);
+
+    // Trigger animation
+    requestAnimationFrame(function() { popup.classList.add('show'); });
+
+    setTimeout(function() {
+      popup.classList.add('fade');
+      setTimeout(function() { if (popup.parentNode) popup.parentNode.removeChild(popup); }, 400);
+    }, 2000);
   }
 
   function showRedeemModal() {
     var existing = $('redeemModal');
     if (existing) {
+      // Refresh points display
+      var pts = (state.progress && state.progress.points) || 0;
+      var completed = (state.progress && Array.isArray(state.progress.completedProblems)) ? state.progress.completedProblems.length : 0;
+      var bigEl = existing.querySelector('.points-big');
+      if (bigEl) bigEl.textContent = pts;
+      var statsEl = existing.querySelector('.points-stats-mini span');
+      if (statsEl) statsEl.textContent = completed + ' problems mastered';
+      var amtInput = $('redeemAmount');
+      if (amtInput) { amtInput.value = ''; amtInput.max = pts; }
       existing.classList.remove('hidden');
       var pinInput = $('redeemPin');
       if (pinInput) { pinInput.value = ''; pinInput.focus(); }
-      var amtInput = $('redeemAmount');
-      if (amtInput) amtInput.value = '';
       var errEl = $('redeemError');
       if (errEl) errEl.classList.add('hidden');
       return;
     }
 
     var pts = (state.progress && state.progress.points) || 0;
+    var completed = (state.progress && Array.isArray(state.progress.completedProblems)) ? state.progress.completedProblems.length : 0;
     var modal = document.createElement('div');
     modal.id = 'redeemModal';
     modal.className = 'pin-modal redeem-modal';
     modal.innerHTML =
       '<div class="pin-modal-card redeem-modal-card">' +
-        '<div class="pin-modal-icon">&#x1F381;</div>' +
-        '<h3 class="pin-modal-title">Redeem Points</h3>' +
-        '<p class="pin-modal-desc">You have <strong>' + pts + '</strong> points</p>' +
+        '<div class="pin-modal-icon">&#x2B50;</div>' +
+        '<h3 class="pin-modal-title">My Points</h3>' +
+        '<div class="points-big">' + pts + '</div>' +
+        '<div class="points-rules">' +
+          '<div class="points-rule"><span class="rule-icon">&#x2705;</span> Answer correctly <span class="rule-pts">+10</span></div>' +
+          '<div class="points-rule"><span class="rule-icon">&#x1F4AA;</span> Try a problem <span class="rule-pts">+2</span></div>' +
+          '<div class="points-rule"><span class="rule-icon">&#x1F4C5;</span> Daily check-in <span class="rule-pts">+2</span></div>' +
+        '</div>' +
+        '<div class="points-stats-mini">' +
+          '<span>' + completed + ' problems mastered</span>' +
+        '</div>' +
+        '<hr class="redeem-divider">' +
+        '<p class="redeem-section-title">Redeem Points</p>' +
         '<input type="password" id="redeemPin" class="pin-input" maxlength="20" placeholder="Parent password" autocomplete="off">' +
         '<input type="number" id="redeemAmount" class="pin-input" min="1" max="' + pts + '" placeholder="Points to redeem">' +
         '<div class="pin-error hidden" id="redeemError"></div>' +
         '<button class="btn btn-primary pin-submit-btn" id="redeemSubmitBtn">Redeem</button>' +
-        '<button class="btn btn-ghost pin-skip-btn" id="redeemCancelBtn">Cancel</button>' +
+        '<button class="btn btn-ghost pin-skip-btn" id="redeemCancelBtn">Close</button>' +
       '</div>';
     document.body.appendChild(modal);
 
