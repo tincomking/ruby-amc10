@@ -139,25 +139,35 @@ function callClaudeAPI(systemPrompt, messages) {
 }
 
 // Fetch detailed step-by-step explanation from AI
+// Returns an array of hint-like progressive steps
 function fetchDetailedExplanation(problem, isCorrect) {
   if (!isAIAvailable()) {
     return Promise.reject(new Error('AI not available'));
   }
 
   var explanationPrompt = [
-    'You are Mametchi, explaining a math problem step by step to Ruby (10th grader preparing for AMC 10).',
+    'You are Mametchi, guiding Ruby (10th grader, AMC 10 prep) through a math problem.',
+    '',
+    'IMPORTANT: Give PROGRESSIVE HINTS, not the full answer at once!',
+    'Each step should reveal a LITTLE MORE, like peeling an onion:',
+    '',
+    'Step 1: Identify what we know and what we need to find (no calculation yet)',
+    'Step 2: Suggest the key concept/theorem/formula to use (hint, not answer)',
+    'Step 3: Set up the equation or draw the connection',
+    'Step 4: Do the first part of the calculation',
+    'Step 5: Complete the calculation and arrive at the answer',
+    'Step 6: Verify or explain why this makes sense',
     '',
     'RULES:',
-    '- Break the solution into 4-6 clear, detailed steps',
-    '- Each step should explain ONE concept or calculation',
+    '- 5-7 steps, each building on the previous',
+    '- Early steps should be HINTS that help Ruby think, not spoilers',
     '- Use $LaTeX$ for ALL math expressions',
-    '- Be encouraging and educational',
-    '- Start with identifying what we know, then build toward the answer',
-    '- Include "why" explanations, not just "what"',
-    '- If it\'s a geometry problem, describe the geometric relationships',
+    '- Be encouraging: "Think about...", "Notice that...", "Can you see why...?"',
+    '- Each step reveals ONE new piece of the puzzle',
+    '- Final step confirms the answer with verification',
     '',
     'RESPONSE FORMAT: Return a JSON array of step strings only (no markdown, no code fences):',
-    '["Step 1 text with $LaTeX$...", "Step 2 text...", ...]'
+    '["First, let\'s identify what we know...", "Think about which formula...", ...]'
   ].join('\n');
 
   var userMsg = 'Problem: ' + problem.problem + '\n' +
@@ -165,11 +175,11 @@ function fetchDetailedExplanation(problem, isCorrect) {
     'Topic: ' + problem.topic + '\n';
 
   if (problem.solution) {
-    userMsg += 'Brief solution: ' + problem.solution + '\n';
+    userMsg += 'Reference solution: ' + problem.solution + '\n';
   }
 
-  userMsg += '\nPlease give a detailed step-by-step explanation' +
-    (isCorrect ? ' as a solution walkthrough.' : ' to help Ruby understand where she went wrong.') +
+  userMsg += '\nGive progressive hints that guide Ruby to the answer step by step.' +
+    (isCorrect ? ' She got it right, so frame it as a walkthrough.' : ' She got it wrong, so help her discover what she missed.') +
     '\nRespond with a JSON array of step strings only.';
 
   return callClaudeAPI(explanationPrompt, [{ role: 'user', content: userMsg }])

@@ -622,35 +622,44 @@
     if (!solutionText) return ['No solution available.'];
 
     // Split by double newlines, numbered lines, or "Step" markers
-    var steps = solutionText.split(/\n\n+/).filter(function(s) { return s.trim().length > 0; });
+    var rawSteps = solutionText.split(/\n\n+/).filter(function(s) { return s.trim().length > 0; });
 
-    // If only 1 step and it's long, try splitting by sentence boundaries after math
-    if (steps.length <= 1 && solutionText.length > 200) {
-      steps = solutionText.split(/\.\s+(?=[A-Z$\\])/).filter(function(s) { return s.trim().length > 0; });
-      steps = steps.map(function(s, i) {
-        return i < steps.length - 1 ? s + '.' : s;
+    // If only 1 chunk, try splitting by sentence boundaries
+    if (rawSteps.length <= 1) {
+      rawSteps = solutionText.split(/\.\s+/).filter(function(s) { return s.trim().length > 0; });
+      rawSteps = rawSteps.map(function(s, i) {
+        return i < rawSteps.length - 1 ? s + '.' : s;
       });
     }
 
-    // If still only 1 step and it's long, split by sentences
-    if (steps.length <= 1 && solutionText.length > 300) {
-      steps = solutionText.split(/\.\s+/).filter(function(s) { return s.trim().length > 0; });
-      steps = steps.map(function(s, i) {
-        return i < steps.length - 1 ? s + '.' : s;
-      });
+    // Ensure at least 3 steps by wrapping in hint-like framing
+    var steps = [];
+    if (rawSteps.length <= 2) {
+      // Create hint-style progression from a short solution
+      steps.push("Let's start by identifying what we know and what we need to find from the problem.");
+      steps.push("Think about which formula, theorem, or technique applies here...");
+      for (var i = 0; i < rawSteps.length; i++) {
+        steps.push(rawSteps[i]);
+      }
+      steps.push("Can you see why this answer makes sense? Try checking it by substituting back!");
+    } else {
+      // Prepend a "what do we know" hint
+      steps.push("Let's read carefully. What information does the problem give us, and what does it ask?");
+      for (var i = 0; i < rawSteps.length; i++) {
+        steps.push(rawSteps[i]);
+      }
     }
 
     // Cap at 8 steps max
     if (steps.length > 8) {
       var merged = [];
-      var perGroup = Math.ceil(steps.length / 6);
+      var perGroup = Math.ceil(steps.length / 7);
       for (var i = 0; i < steps.length; i += perGroup) {
         merged.push(steps.slice(i, i + perGroup).join(' '));
       }
       steps = merged;
     }
 
-    if (steps.length === 0) steps = [solutionText];
     return steps;
   }
 

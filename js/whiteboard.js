@@ -54,11 +54,11 @@ var Whiteboard = (function() {
     if (!canvas || !wrapEl) return;
     var rect = canvas.parentElement.getBoundingClientRect();
     var w = rect.width || canvas.parentElement.offsetWidth || 300;
-    var h = 300;
+    // Let CSS control height via calc(100vh - 220px), read computed value
+    var computedH = parseFloat(window.getComputedStyle(canvas).height) || 500;
     canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
     canvas.width = w * dpr;
-    canvas.height = h * dpr;
+    canvas.height = computedH * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     redrawAll();
   }
