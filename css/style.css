@@ -2807,8 +2807,8 @@ body::before {
   width: 100%;
   padding: 14px 18px;
   font-family: var(--font-display);
-  font-size: 24px;
-  letter-spacing: 8px;
+  font-size: 18px;
+  letter-spacing: 4px;
   text-align: center;
   border: 2px solid rgba(27, 42, 74, 0.12);
   border-radius: var(--r-lg);
@@ -2817,6 +2817,12 @@ body::before {
   outline: none;
   transition: border-color 0.2s;
   box-sizing: border-box;
+}
+
+.pin-input-name {
+  font-size: 16px;
+  letter-spacing: 1px;
+  margin-bottom: var(--space-sm);
 }
 
 .pin-input:focus {

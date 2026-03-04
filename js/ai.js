@@ -84,7 +84,7 @@ function hasValidSession() {
   return AI_CONFIG.sessionToken && AI_CONFIG.sessionExpires > Date.now();
 }
 
-function loginWithPIN(pin) {
+function loginWithCredentials(username, password) {
   if (!AI_CONFIG.endpoint) {
     return Promise.reject(new Error('AI not configured'));
   }
@@ -92,7 +92,7 @@ function loginWithPIN(pin) {
   return fetch(AI_CONFIG.endpoint + '/auth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pin: pin })
+    body: JSON.stringify({ username: username, password: password })
   }).then(function(res) {
     return res.json().then(function(data) {
       if (!res.ok) {
@@ -313,8 +313,8 @@ function showPINModal() {
   var existing = document.getElementById('pinModal');
   if (existing) {
     existing.classList.remove('hidden');
-    var input = document.getElementById('pinInput');
-    if (input) { input.value = ''; input.focus(); }
+    var pwInput = document.getElementById('pinPassword');
+    if (pwInput) { pwInput.value = ''; pwInput.focus(); }
     return;
   }
 
@@ -323,10 +323,11 @@ function showPINModal() {
   modal.className = 'pin-modal';
   modal.innerHTML =
     '<div class="pin-modal-card">' +
-      '<div class="pin-modal-icon">🔐</div>' +
-      '<h3 class="pin-modal-title">Enter PIN</h3>' +
-      '<p class="pin-modal-desc">PIN to unlock Mametchi\'s AI brain</p>' +
-      '<input type="password" id="pinInput" class="pin-input" maxlength="20" placeholder="••••" autocomplete="off" inputmode="numeric">' +
+      '<div class="pin-modal-icon">&#x1F510;</div>' +
+      '<h3 class="pin-modal-title">Login</h3>' +
+      '<p class="pin-modal-desc">Unlock Mametchi\'s AI brain</p>' +
+      '<input type="text" id="pinUsername" class="pin-input pin-input-name" maxlength="20" placeholder="Username" autocomplete="username" autocapitalize="off">' +
+      '<input type="password" id="pinPassword" class="pin-input" maxlength="20" placeholder="Password" autocomplete="current-password">' +
       '<div class="pin-error hidden" id="pinError"></div>' +
       '<button class="btn btn-primary pin-submit-btn" id="pinSubmitBtn">Unlock</button>' +
       '<button class="btn btn-ghost pin-skip-btn" id="pinSkipBtn">Skip (offline mode)</button>' +
@@ -334,43 +335,48 @@ function showPINModal() {
 
   document.body.appendChild(modal);
 
-  var input = document.getElementById('pinInput');
+  var userInput = document.getElementById('pinUsername');
+  var pwInput = document.getElementById('pinPassword');
   var submitBtn = document.getElementById('pinSubmitBtn');
   var skipBtn = document.getElementById('pinSkipBtn');
   var errorEl = document.getElementById('pinError');
 
   function doLogin() {
-    var pin = input.value.trim();
-    if (!pin) return;
+    var username = userInput.value.trim();
+    var password = pwInput.value.trim();
+    if (!username || !password) return;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Checking...';
     errorEl.classList.add('hidden');
 
-    loginWithPIN(pin)
+    loginWithCredentials(username, password)
       .then(function() {
         modal.classList.add('hidden');
         submitBtn.disabled = false;
         submitBtn.textContent = 'Unlock';
       })
       .catch(function(err) {
-        errorEl.textContent = err.message || 'Wrong PIN';
+        errorEl.textContent = err.message || 'Wrong username or password';
         errorEl.classList.remove('hidden');
-        input.value = '';
-        input.focus();
+        pwInput.value = '';
+        pwInput.focus();
         submitBtn.disabled = false;
         submitBtn.textContent = 'Unlock';
       });
   }
 
   submitBtn.addEventListener('click', doLogin);
-  input.addEventListener('keydown', function(e) {
+  pwInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doLogin();
+  });
+  userInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') pwInput.focus();
   });
   skipBtn.addEventListener('click', function() {
     modal.classList.add('hidden');
   });
 
-  input.focus();
+  userInput.focus();
 }
 
 function initAISession() {

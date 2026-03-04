@@ -4,7 +4,7 @@
 //
 // Required secrets (wrangler secret put <NAME>):
 //   ANTHROPIC_API_KEY  - Anthropic API key
-//   PIN_HASH           - SHA-256 hex of the PIN (generate: echo -n "your-pin" | shasum -a 256)
+//   CRED_HASH          - SHA-256 hex of "username:password" (echo -n "user:pass" | shasum -a 256)
 //   HMAC_SECRET        - Random string for signing session tokens (any long random string)
 //
 // Security layers:
@@ -53,17 +53,18 @@ export default {
 
       try {
         const body = await request.json();
-        const pin = String(body.pin || '');
+        const username = String(body.username || '').trim().toLowerCase();
+        const password = String(body.password || '');
 
-        if (!pin) {
-          return jsonResponse({ error: 'PIN required' }, 400, request);
+        if (!username || !password) {
+          return jsonResponse({ error: 'Username and password required' }, 400, request);
         }
 
-        // Hash the submitted PIN and compare
-        const pinHash = await sha256(pin);
+        // Hash "username:password" and compare
+        const credHash = await sha256(username + ':' + password);
 
-        if (!env.PIN_HASH || pinHash !== env.PIN_HASH.toLowerCase()) {
-          return jsonResponse({ error: 'Wrong PIN' }, 401, request);
+        if (!env.CRED_HASH || credHash !== env.CRED_HASH.toLowerCase()) {
+          return jsonResponse({ error: 'Wrong username or password' }, 401, request);
         }
 
         // Generate session token: timestamp.hmac
