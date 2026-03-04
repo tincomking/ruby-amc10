@@ -555,12 +555,47 @@
         badge.className = 'solution-step-number';
         badge.textContent = (i + 1);
 
+        var body = document.createElement('div');
+        body.className = 'solution-step-body';
+
         var content = document.createElement('div');
         content.className = 'solution-step-content';
         content.textContent = steps[i];
+        body.appendChild(content);
+
+        // Add expandable detail if available
+        var hasDetail = problem.hintDetails && problem.hintDetails[i];
+        if (hasDetail) {
+          stepDiv.classList.add('step-expandable');
+
+          var tapHint = document.createElement('div');
+          tapHint.className = 'solution-step-expand-hint';
+          tapHint.textContent = 'Tap for more detail \u25B8';
+          body.appendChild(tapHint);
+
+          var detail = document.createElement('div');
+          detail.className = 'solution-step-detail';
+          detail.textContent = problem.hintDetails[i];
+          body.appendChild(detail);
+
+          (function(sd, det) {
+            sd.addEventListener('click', function(e) {
+              e.stopPropagation();
+              var wasOpen = sd.classList.contains('step-detail-open');
+              var allOpen = stepsEl.querySelectorAll('.step-detail-open');
+              for (var k = 0; k < allOpen.length; k++) {
+                allOpen[k].classList.remove('step-detail-open');
+              }
+              if (!wasOpen) {
+                sd.classList.add('step-detail-open');
+                renderMathIn(det);
+              }
+            });
+          })(stepDiv, detail);
+        }
 
         stepDiv.appendChild(badge);
-        stepDiv.appendChild(content);
+        stepDiv.appendChild(body);
         stepsEl.appendChild(stepDiv);
       }
 

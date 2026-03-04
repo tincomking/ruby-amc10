@@ -1328,14 +1328,71 @@ body::before {
   margin-top: 2px;
 }
 
-.solution-step-content {
+.solution-step-body {
   flex: 1;
+  min-width: 0;
+}
+
+.solution-step-content {
   font-size: 15px;
   line-height: 1.8;
 }
 
 .solution-step-content .katex-display {
   margin: 8px 0;
+}
+
+/* Expandable step detail */
+.solution-step.step-expandable {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: all 0.4s var(--ease-out), background 0.15s ease;
+}
+
+.solution-step.step-expandable:active {
+  background: rgba(27, 42, 74, 0.06);
+}
+
+.solution-step-expand-hint {
+  font-size: 11px;
+  color: var(--coral);
+  opacity: 0.6;
+  margin-top: 4px;
+  transition: opacity 0.2s;
+}
+
+.solution-step.step-detail-open .solution-step-expand-hint {
+  opacity: 0;
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.solution-step-detail {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.08), rgba(255, 107, 107, 0.04));
+  border-radius: 8px;
+  padding: 0 12px;
+  margin-top: 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  border-left: 2px solid var(--mint);
+}
+
+.solution-step.step-detail-open .solution-step-detail {
+  max-height: 600px;
+  opacity: 1;
+  padding: 10px 14px;
+  margin-top: 8px;
+}
+
+.solution-step-detail .katex-display {
+  margin: 6px 0;
 }
 
 .step-next-btn {

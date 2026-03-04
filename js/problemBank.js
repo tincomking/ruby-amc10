@@ -1100,6 +1100,7 @@ function getLocalProblem(topic, subtopic, difficulty) {
     hint: p.hint,
     solution: p.solution,
     hints: p.hints || null,
+    hintDetails: p.hintDetails || (typeof getHintDetails === 'function' ? getHintDetails(p.problem) : null),
     mametchiIntro: getRandomIntro(topic),
     mametchiCorrect: getRandomCorrect(),
     mametchiWrong: getRandomWrong(),
