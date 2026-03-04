@@ -756,6 +756,27 @@ body::before {
   gap: var(--space-lg);
 }
 
+/* Two-column layout: problem left, whiteboard right */
+.problem-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.problem-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 0;
+}
+
+.problem-col-right {
+  position: sticky;
+  top: 120px;
+  min-width: 0;
+}
+
 /* ----------------------------- Mametchi Section ----------------------------- */
 .mametchi-section {
   display: flex;
@@ -2390,6 +2411,26 @@ body::before {
     line-height: 1.8;
   }
 
+  .problem-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .problem-col-right {
+    position: static;
+  }
+
+  .whiteboard-header {
+    display: none;
+  }
+
+  .whiteboard-toggle {
+    display: flex;
+  }
+
+  #whiteboardCanvas {
+    height: 250px;
+  }
+
   .answer-actions {
     flex-wrap: wrap;
   }
@@ -2398,10 +2439,6 @@ body::before {
     flex: 1;
     min-width: 0;
     padding: 12px 16px;
-  }
-
-  #whiteboardCanvas {
-    height: 250px;
   }
 
   .geo-diagram {
@@ -2538,7 +2575,24 @@ body::before {
   }
 
   .tab-panel {
-    max-width: 800px;
+    max-width: 100%;
+    padding: var(--space-md);
+  }
+
+  .problem-columns {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+  }
+
+  #whiteboardCanvas {
+    height: 350px;
+  }
+}
+
+/* Wide desktop */
+@media (min-width: 1025px) {
+  .tab-panel {
+    max-width: 1100px;
   }
 }
 
@@ -2597,34 +2651,23 @@ body::before {
 
 /* ----------------------------- Whiteboard / Scratchpad ----------------------------- */
 .whiteboard-section {
-  margin-top: var(--space-md);
+  /* Always visible in right column */
 }
 
-.whiteboard-toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--bg-card);
-  border: 1px solid rgba(27, 42, 74, 0.1);
-  border-radius: var(--r-lg);
+.whiteboard-header {
   font-family: var(--font-display);
   font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-  justify-content: center;
+  padding: 8px 0;
+  text-align: center;
 }
 
-.whiteboard-toggle:hover {
-  background: var(--bg-card-hover);
-  border-color: rgba(27, 42, 74, 0.18);
+.whiteboard-toggle {
+  display: none; /* Hidden in two-column mode */
 }
 
 .whiteboard-wrap {
-  margin-top: 8px;
   background: var(--bg-card);
   border: 1px solid rgba(27, 42, 74, 0.1);
   border-radius: var(--r-xl);
@@ -2702,7 +2745,7 @@ body::before {
 #whiteboardCanvas {
   display: block;
   width: 100%;
-  height: 300px;
+  height: 400px;
   touch-action: none;
   cursor: default;
   background: #FEFEFE;

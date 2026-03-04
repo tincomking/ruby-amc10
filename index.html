@@ -176,7 +176,7 @@
             <span>Topics</span>
           </button>
 
-          <!-- Mametchi + Dialog -->
+          <!-- Mametchi + Dialog (full width) -->
           <div class="mametchi-section">
             <div class="mametchi-container" id="problemMametchi">
               <!-- Mametchi SVG inserted by JS -->
@@ -186,67 +186,77 @@
             </div>
           </div>
 
-          <!-- Problem Card -->
-          <div class="problem-card" id="problemCard">
-            <div class="problem-meta">
-              <span class="problem-topic" id="problemTopic"></span>
-              <span class="problem-difficulty" id="problemDifficulty"></span>
-              <span class="problem-counter" id="problemCounter"></span>
-            </div>
-            <div class="problem-text" id="problemText">
-              <!-- KaTeX rendered problem -->
-            </div>
-          </div>
+          <!-- Two-column: Left (problem) + Right (whiteboard) -->
+          <div class="problem-columns">
 
-          <!-- Whiteboard / Scratchpad -->
-          <div class="whiteboard-section" id="whiteboardSection">
-            <button class="whiteboard-toggle" id="whiteboardToggle">&#x270F;&#xFE0F; Scratchpad &#x25BE;</button>
-            <div class="whiteboard-wrap" id="whiteboardWrap">
-              <div class="whiteboard-toolbar">
-                <button class="wb-tool-btn active" id="wbPenBtn" title="Pen">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                </button>
-                <button class="wb-tool-btn" id="wbEraserBtn" title="Eraser">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l9-9 8 8-4 5z"/><path d="M6.5 13.5l5 5"/></svg>
-                </button>
-                <span class="wb-separator"></span>
-                <button class="wb-color-btn active" data-color="#1B2A4A" title="Navy" style="background:#1B2A4A;"></button>
-                <button class="wb-color-btn" data-color="#FF6B6B" title="Coral" style="background:#FF6B6B;"></button>
-                <button class="wb-color-btn" data-color="#4ECDC4" title="Mint" style="background:#4ECDC4;"></button>
-                <span class="wb-separator"></span>
-                <button class="wb-tool-btn" id="wbUndoBtn" title="Undo">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                </button>
-                <button class="wb-tool-btn" id="wbClearBtn" title="Clear All">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
+            <!-- Left Column: Problem + Answers -->
+            <div class="problem-col-left">
+              <!-- Problem Card -->
+              <div class="problem-card" id="problemCard">
+                <div class="problem-meta">
+                  <span class="problem-topic" id="problemTopic"></span>
+                  <span class="problem-difficulty" id="problemDifficulty"></span>
+                  <span class="problem-counter" id="problemCounter"></span>
+                </div>
+                <div class="problem-text" id="problemText">
+                  <!-- KaTeX rendered problem -->
+                </div>
               </div>
-              <canvas id="whiteboardCanvas"></canvas>
-            </div>
-          </div>
 
-          <!-- Answer Area -->
-          <div class="answer-section" id="answerSection">
-            <div class="choices" id="choices">
-              <!-- Choice buttons inserted by JS -->
-            </div>
-            <div class="answer-actions">
-              <button class="btn btn-primary" id="submitBtn" disabled>Submit Answer</button>
-              <button class="btn btn-secondary" id="hintBtn">Hint</button>
-              <button class="btn btn-ghost" id="skipBtn">Skip</button>
-            </div>
-          </div>
+              <!-- Answer Area -->
+              <div class="answer-section" id="answerSection">
+                <div class="choices" id="choices">
+                  <!-- Choice buttons inserted by JS -->
+                </div>
+                <div class="answer-actions">
+                  <button class="btn btn-primary" id="submitBtn" disabled>Submit Answer</button>
+                  <button class="btn btn-secondary" id="hintBtn">Hint</button>
+                  <button class="btn btn-ghost" id="skipBtn">Skip</button>
+                </div>
+              </div>
 
-          <!-- Hint Area (hidden by default) -->
-          <div class="hint-card hidden" id="hintCard">
-            <div class="hint-label">
-              <svg class="hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
-              Hint
+              <!-- Hint Area (hidden by default) -->
+              <div class="hint-card hidden" id="hintCard">
+                <div class="hint-label">
+                  <svg class="hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+                  Hint
+                </div>
+                <div class="hint-text" id="hintText"></div>
+              </div>
             </div>
-            <div class="hint-text" id="hintText"></div>
-          </div>
 
-          <!-- Solution Card (hidden by default) -->
+            <!-- Right Column: Whiteboard -->
+            <div class="problem-col-right">
+              <div class="whiteboard-section" id="whiteboardSection">
+                <div class="whiteboard-header">&#x270F;&#xFE0F; Scratchpad</div>
+                <div class="whiteboard-wrap" id="whiteboardWrap">
+                  <div class="whiteboard-toolbar">
+                    <button class="wb-tool-btn active" id="wbPenBtn" title="Pen">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    </button>
+                    <button class="wb-tool-btn" id="wbEraserBtn" title="Eraser">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l9-9 8 8-4 5z"/><path d="M6.5 13.5l5 5"/></svg>
+                    </button>
+                    <span class="wb-separator"></span>
+                    <button class="wb-color-btn active" data-color="#1B2A4A" title="Navy" style="background:#1B2A4A;"></button>
+                    <button class="wb-color-btn" data-color="#FF6B6B" title="Coral" style="background:#FF6B6B;"></button>
+                    <button class="wb-color-btn" data-color="#4ECDC4" title="Mint" style="background:#4ECDC4;"></button>
+                    <span class="wb-separator"></span>
+                    <button class="wb-tool-btn" id="wbUndoBtn" title="Undo">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                    </button>
+                    <button class="wb-tool-btn" id="wbClearBtn" title="Clear All">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                  <canvas id="whiteboardCanvas"></canvas>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /problem-columns -->
+
+          <!-- Solution Card (full width, below columns) -->
           <div class="solution-card hidden" id="solutionCard">
             <div class="solution-header" id="solutionHeader"></div>
 

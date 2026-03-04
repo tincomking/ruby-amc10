@@ -138,6 +138,53 @@ function callClaudeAPI(systemPrompt, messages) {
   });
 }
 
+// Fetch detailed step-by-step explanation from AI
+function fetchDetailedExplanation(problem, isCorrect) {
+  if (!isAIAvailable()) {
+    return Promise.reject(new Error('AI not available'));
+  }
+
+  var explanationPrompt = [
+    'You are Mametchi, explaining a math problem step by step to Ruby (10th grader preparing for AMC 10).',
+    '',
+    'RULES:',
+    '- Break the solution into 4-6 clear, detailed steps',
+    '- Each step should explain ONE concept or calculation',
+    '- Use $LaTeX$ for ALL math expressions',
+    '- Be encouraging and educational',
+    '- Start with identifying what we know, then build toward the answer',
+    '- Include "why" explanations, not just "what"',
+    '- If it\'s a geometry problem, describe the geometric relationships',
+    '',
+    'RESPONSE FORMAT: Return a JSON array of step strings only (no markdown, no code fences):',
+    '["Step 1 text with $LaTeX$...", "Step 2 text...", ...]'
+  ].join('\n');
+
+  var userMsg = 'Problem: ' + problem.problem + '\n' +
+    'Correct answer: ' + problem.correctAnswer + '\n' +
+    'Topic: ' + problem.topic + '\n';
+
+  if (problem.solution) {
+    userMsg += 'Brief solution: ' + problem.solution + '\n';
+  }
+
+  userMsg += '\nPlease give a detailed step-by-step explanation' +
+    (isCorrect ? ' as a solution walkthrough.' : ' to help Ruby understand where she went wrong.') +
+    '\nRespond with a JSON array of step strings only.';
+
+  return callClaudeAPI(explanationPrompt, [{ role: 'user', content: userMsg }])
+    .then(function(response) {
+      var text = response.trim();
+      var fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (fenceMatch) text = fenceMatch[1].trim();
+      var steps = JSON.parse(text);
+      if (Array.isArray(steps) && steps.length >= 2) {
+        return steps;
+      }
+      throw new Error('Invalid steps format');
+    });
+}
+
 // Parse and validate AI response
 function parseAIProblem(responseText, topic, subtopic, difficulty) {
   // Try to extract JSON from response (handle code fences)

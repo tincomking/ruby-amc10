@@ -474,12 +474,33 @@
     setMametchiState('problemMametchi', isCorrect ? 'happy' : 'teaching');
     setDialog(isCorrect ? "Great job! Here's how it works:" : "Let me walk you through this step by step!");
 
+    // Try AI-powered detailed explanation first, fallback to local split
+    if (typeof fetchDetailedExplanation === 'function' && isAIAvailable()) {
+      setDialog(isCorrect ? "Great job! Let me show you the solution..." : "Let me think about how to explain this...");
+      fetchDetailedExplanation(problem, isCorrect)
+        .then(function(aiSteps) {
+          renderExplanationSteps(problem, aiSteps, isCorrect);
+        })
+        .catch(function() {
+          // Fallback to local split
+          var steps = getLocalSteps(problem);
+          renderExplanationSteps(problem, steps, isCorrect);
+        });
+    } else {
+      var steps = getLocalSteps(problem);
+      renderExplanationSteps(problem, steps, isCorrect);
+    }
+  }
+
+  function getLocalSteps(problem) {
     var solutionText = problem.solution || '';
     if (problem.solutions && problem.solutions.length > 0) {
       solutionText = problem.solutions[0].text || solutionText;
     }
+    return splitIntoSteps(solutionText);
+  }
 
-    var steps = splitIntoSteps(solutionText);
+  function renderExplanationSteps(problem, steps, isCorrect) {
     state.solutionSteps = steps;
     state.currentStep = 0;
     state.allStepsShown = false;
@@ -552,6 +573,9 @@
 
     var answerSection = $('answerSection');
     if (answerSection) answerSection.style.display = 'none';
+
+    setMametchiState('problemMametchi', isCorrect ? 'happy' : 'teaching');
+    setDialog(isCorrect ? "Great job! Here's how it works:" : "Let me walk you through this step by step!");
   }
 
   function revealStep(index) {
