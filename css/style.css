@@ -2805,10 +2805,12 @@ body::before {
 #whiteboardCanvas {
   display: block;
   width: 100%;
+  min-width: 0;
   height: calc(100vh - 220px);
   min-height: 500px;
   max-height: 800px;
   touch-action: none;
+  -webkit-touch-callout: none;
   cursor: default;
   background: #FEFEFE;
 }
