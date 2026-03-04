@@ -501,6 +501,10 @@
   }
 
   function getLocalSteps(problem) {
+    // Use pre-generated hints if available
+    if (problem.hints && problem.hints.length > 0) {
+      return problem.hints;
+    }
     var solutionText = problem.solution || '';
     if (problem.solutions && problem.solutions.length > 0) {
       solutionText = problem.solutions[0].text || solutionText;
