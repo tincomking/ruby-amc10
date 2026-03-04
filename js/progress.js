@@ -55,6 +55,10 @@ var DEFAULT_PROGRESS = {
       }
     }
   },
+  points: 0,
+  completedProblems: [],
+  lastCheckInDate: null,
+  redeemHistory: [],
   reviewQueue: [],
   recentProblems: [],
   dailyStats: {},
@@ -89,6 +93,8 @@ function saveProgress(progress) {
       return p.timestamp > cutoff;
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    // Async push to cloud
+    syncToCloud(progress);
   } catch (e) {
     console.warn('Failed to save progress:', e);
   }
@@ -110,8 +116,26 @@ function mergeDeep(target, source) {
 }
 
 // Record a problem result
-function recordProblem(progress, topic, subtopic, difficulty, wasCorrect, timeSpent) {
+function recordProblem(progress, topic, subtopic, difficulty, wasCorrect, timeSpent, problemText) {
   var today = new Date().toISOString().slice(0, 10);
+
+  // Daily check-in bonus (+2 points)
+  if (progress.lastCheckInDate !== today) {
+    progress.points = (progress.points || 0) + 2;
+    progress.lastCheckInDate = today;
+  }
+
+  // Points: correct +10, wrong +2
+  progress.points = (progress.points || 0) + (wasCorrect ? 10 : 2);
+
+  // Track completed problems (answered correctly)
+  if (wasCorrect && problemText) {
+    if (!Array.isArray(progress.completedProblems)) progress.completedProblems = [];
+    var hash = getProblemHash(problemText);
+    if (progress.completedProblems.indexOf(hash) === -1) {
+      progress.completedProblems.push(hash);
+    }
+  }
 
   // Update student stats
   progress.student.totalProblems++;
@@ -316,4 +340,66 @@ function getTopicMastery(progress, topic) {
   }
   // Level 1-5 maps to 0-100%
   return count > 0 ? Math.round(((totalLevel / count) - 1) / 4 * 100) : 0;
+}
+
+// ---- Problem Hash (djb2, first 80 chars) ----
+function getProblemHash(text) {
+  var str = String(text || '').slice(0, 80);
+  var hash = 5381;
+  for (var i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return (hash >>> 0).toString(16);
+}
+
+function isProblemCompleted(progress, text) {
+  if (!progress || !Array.isArray(progress.completedProblems)) return false;
+  return progress.completedProblems.indexOf(getProblemHash(text)) !== -1;
+}
+
+// ---- Cloud Sync ----
+var _syncTimer = null;
+var _cloudEndpoint = '';
+
+function setCloudEndpoint(endpoint) {
+  _cloudEndpoint = endpoint;
+}
+
+function syncToCloud(progress) {
+  if (!_cloudEndpoint || typeof AI_CONFIG === 'undefined' || !AI_CONFIG.sessionToken) return;
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(function() {
+    _syncTimer = null;
+    fetch(_cloudEndpoint + '/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: AI_CONFIG.sessionToken, data: progress })
+    }).catch(function(e) {
+      console.warn('Cloud sync failed:', e);
+    });
+  }, 2000);
+}
+
+function fetchCloudProgress() {
+  if (!_cloudEndpoint || typeof AI_CONFIG === 'undefined' || !AI_CONFIG.sessionToken) {
+    return Promise.resolve(null);
+  }
+  return fetch(_cloudEndpoint + '/progress', {
+    method: 'GET',
+    headers: { 'Authorization': 'Bearer ' + AI_CONFIG.sessionToken }
+  }).then(function(res) {
+    if (!res.ok) throw new Error('Cloud fetch failed: ' + res.status);
+    return res.json();
+  }).then(function(result) {
+    if (result.data && Object.keys(result.data).length > 0) {
+      var merged = mergeDeep(JSON.parse(JSON.stringify(DEFAULT_PROGRESS)), result.data);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      return merged;
+    }
+    return null;
+  }).catch(function(e) {
+    console.warn('fetchCloudProgress error:', e);
+    return null;
+  });
 }

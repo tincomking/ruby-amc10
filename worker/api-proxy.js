@@ -30,8 +30,8 @@ export default {
       return new Response(null, { headers: corsHeaders(request) });
     }
 
-    // Only POST
-    if (request.method !== 'POST') {
+    // Only POST and GET (GET only for /progress)
+    if (request.method !== 'POST' && request.method !== 'GET') {
       return jsonResponse({ error: 'Method not allowed' }, 405, request);
     }
 
@@ -144,6 +144,79 @@ export default {
       }
     }
 
+    // Route: GET /progress - Fetch cloud progress
+    if (url.pathname === '/progress' && request.method === 'GET') {
+      var authHeader = request.headers.get('Authorization') || '';
+      var bearerToken = authHeader.replace('Bearer ', '');
+      var valid = await validateToken(bearerToken, env.HMAC_SECRET);
+      if (!valid) {
+        return jsonResponse({ error: 'Session expired. Please log in again.' }, 401, request);
+      }
+      try {
+        var data = await env.PROGRESS_KV.get('progress:' + env.CRED_HASH, 'json');
+        return jsonResponse({ data: data || {} }, 200, request);
+      } catch (err) {
+        return jsonResponse({ error: 'Failed to read progress' }, 500, request);
+      }
+    }
+
+    // Route: POST /progress - Save cloud progress
+    if (url.pathname === '/progress' && request.method === 'POST') {
+      try {
+        var body = await request.json();
+        var valid = await validateToken(body.token || '', env.HMAC_SECRET);
+        if (!valid) {
+          return jsonResponse({ error: 'Session expired. Please log in again.' }, 401, request);
+        }
+        if (!body.data) {
+          return jsonResponse({ error: 'Missing data' }, 400, request);
+        }
+        await env.PROGRESS_KV.put('progress:' + env.CRED_HASH, JSON.stringify(body.data));
+        return jsonResponse({ ok: true }, 200, request);
+      } catch (err) {
+        return jsonResponse({ error: 'Failed to save progress', message: err.message }, 500, request);
+      }
+    }
+
+    // Route: POST /redeem - Redeem points with parent PIN
+    if (url.pathname === '/redeem' && request.method === 'POST') {
+      try {
+        var body = await request.json();
+        var valid = await validateToken(body.token || '', env.HMAC_SECRET);
+        if (!valid) {
+          return jsonResponse({ error: 'Session expired. Please log in again.' }, 401, request);
+        }
+        if (!body.parentPin || !body.amount) {
+          return jsonResponse({ error: 'Missing parentPin or amount' }, 400, request);
+        }
+        var pinHash = await sha256(String(body.parentPin));
+        if (!env.PARENT_PIN_HASH || pinHash !== env.PARENT_PIN_HASH.toLowerCase()) {
+          return jsonResponse({ error: 'Wrong parent password' }, 403, request);
+        }
+        var amount = parseInt(body.amount);
+        if (isNaN(amount) || amount <= 0) {
+          return jsonResponse({ error: 'Invalid amount' }, 400, request);
+        }
+        // Read current progress
+        var progress = await env.PROGRESS_KV.get('progress:' + env.CRED_HASH, 'json') || {};
+        var currentPoints = progress.points || 0;
+        if (currentPoints < amount) {
+          return jsonResponse({ error: 'Not enough points (have ' + currentPoints + ')' }, 400, request);
+        }
+        progress.points = currentPoints - amount;
+        if (!Array.isArray(progress.redeemHistory)) progress.redeemHistory = [];
+        progress.redeemHistory.push({
+          date: new Date().toISOString().slice(0, 10),
+          amount: amount,
+          timestamp: Date.now()
+        });
+        await env.PROGRESS_KV.put('progress:' + env.CRED_HASH, JSON.stringify(progress));
+        return jsonResponse({ ok: true, points: progress.points }, 200, request);
+      } catch (err) {
+        return jsonResponse({ error: 'Redeem failed', message: err.message }, 500, request);
+      }
+    }
+
     return jsonResponse({ error: 'Not found' }, 404, request);
   }
 };
@@ -214,8 +287,8 @@ function corsHeaders(request) {
   const allowedOrigin = (origin === ALLOWED_ORIGIN) ? ALLOWED_ORIGIN : ALLOWED_ORIGIN;
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400'
   };
 }

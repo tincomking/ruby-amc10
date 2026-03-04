@@ -6,3 +6,8 @@ compatibility_date = "2024-01-01"
 # ANTHROPIC_API_KEY  - your Anthropic API key
 # CRED_HASH          - SHA-256 of "username:password": echo -n "REDACTED" | shasum -a 256
 # HMAC_SECRET        - any long random string for signing tokens
+# PARENT_PIN_HASH    - SHA-256 of parent PIN: echo -n "REDACTED" | shasum -a 256
+
+[[kv_namespaces]]
+binding = "PROGRESS_KV"
+id = "6ee245f5fcec4c169216710f3c017494"

@@ -1086,6 +1086,18 @@ function getLocalProblem(topic, subtopic, difficulty) {
   });
   if (filtered.length === 0) filtered = problems;
 
+  // Filter out completed problems
+  if (typeof isProblemCompleted === 'function') {
+    var progress = typeof loadProgress === 'function' ? loadProgress() : null;
+    if (progress) {
+      var uncompleted = filtered.filter(function(p) {
+        return !isProblemCompleted(progress, p.problem);
+      });
+      if (uncompleted.length > 0) filtered = uncompleted;
+      // If all done, fall back to full list (allow re-practice)
+    }
+  }
+
   var p = filtered[Math.floor(Math.random() * filtered.length)];
 
   return {

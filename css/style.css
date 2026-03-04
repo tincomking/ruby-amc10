@@ -335,6 +335,69 @@ body::before {
   font-variant-numeric: tabular-nums;
 }
 
+/* Points indicator */
+.points-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #FFF8E1, #FFE082);
+  padding: 5px 14px;
+  border-radius: var(--r-pill);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: #F57F17;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease-bounce), box-shadow 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+
+.points-indicator:hover {
+  transform: scale(1.08);
+  box-shadow: var(--shadow-glow-golden);
+}
+
+.points-star {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.points-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Check-in status */
+.checkin-status {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.checkin-status.checked {
+  color: var(--mint-dark);
+  font-weight: 600;
+}
+
+/* Redeem modal overrides */
+.redeem-modal-card {
+  max-width: 340px;
+}
+
+.redeem-modal-card input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.redeem-modal-card input[type="number"]::-webkit-outer-spin-button,
+.redeem-modal-card input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* ----------------------------- Countdown Timer ----------------------------- */
 .countdown-container {
   display: flex;

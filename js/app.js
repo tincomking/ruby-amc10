@@ -45,12 +45,38 @@
     }
 
     // Configure AI endpoint and init session
+    var aiEndpoint = 'https://mametchi-ai-proxy.tincomking.workers.dev';
     if (typeof configureAI === 'function') {
-      configureAI('https://mametchi-ai-proxy.tincomking.workers.dev');
+      configureAI(aiEndpoint);
+    }
+    if (typeof setCloudEndpoint === 'function') {
+      setCloudEndpoint(aiEndpoint);
     }
     if (typeof initAISession === 'function') {
       initAISession();
     }
+
+    // If already logged in, fetch cloud progress
+    if (typeof hasValidSession === 'function' && hasValidSession() && typeof fetchCloudProgress === 'function') {
+      fetchCloudProgress().then(function(cloudData) {
+        if (cloudData) {
+          state.progress = cloudData;
+          refreshPointsUI();
+          updateDailyStatsDisplay();
+          updateProgressBars();
+          updateSessionStats();
+        }
+      });
+    }
+
+    // Listen for cloud sync events
+    window.addEventListener('progressSynced', function() {
+      state.progress = loadProgress();
+      refreshPointsUI();
+      updateDailyStatsDisplay();
+      updateProgressBars();
+      updateSessionStats();
+    });
 
     // Pre-load exam index in background
     if (typeof ExamMode !== 'undefined') {
@@ -190,6 +216,9 @@
       showPracticeScreen('welcome');
       updateDailyStatsDisplay();
     });
+
+    // Points indicator → redeem modal
+    safeClick('pointsIndicator', showRedeemModal);
 
     // Exam selector events
     var yearSelect = $('examYear');
@@ -440,7 +469,7 @@
     var hintBtn = $('hintBtn');
     if (hintBtn) hintBtn.disabled = true;
 
-    recordProblem(state.progress, problem.topic, problem.subtopic, problem.difficulty, isCorrect, timeSpent);
+    recordProblem(state.progress, problem.topic, problem.subtopic, problem.difficulty, isCorrect, timeSpent, problem.problem);
 
     if (isCorrect) {
       handleCorrect(problem);
@@ -1300,6 +1329,8 @@
 
     var headerStreak = $('headerStreak');
     if (headerStreak) headerStreak.textContent = stats.streak;
+
+    refreshPointsUI();
   }
 
   function updateProgressBars() {
@@ -1324,6 +1355,110 @@
     var div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+  }
+
+  // =========================================================================
+  // POINTS UI + REDEEM
+  // =========================================================================
+  function refreshPointsUI() {
+    var pts = (state.progress && state.progress.points) || 0;
+    var el = $('headerPoints');
+    if (el) el.textContent = pts;
+
+    // Update check-in indicator
+    var today = new Date().toISOString().slice(0, 10);
+    var checkedIn = state.progress && state.progress.lastCheckInDate === today;
+    var checkInEl = $('checkInStatus');
+    if (checkInEl) {
+      checkInEl.textContent = checkedIn ? 'Checked in today!' : 'Do a problem to check in';
+      checkInEl.className = 'checkin-status' + (checkedIn ? ' checked' : '');
+    }
+  }
+
+  function showRedeemModal() {
+    var existing = $('redeemModal');
+    if (existing) {
+      existing.classList.remove('hidden');
+      var pinInput = $('redeemPin');
+      if (pinInput) { pinInput.value = ''; pinInput.focus(); }
+      var amtInput = $('redeemAmount');
+      if (amtInput) amtInput.value = '';
+      var errEl = $('redeemError');
+      if (errEl) errEl.classList.add('hidden');
+      return;
+    }
+
+    var pts = (state.progress && state.progress.points) || 0;
+    var modal = document.createElement('div');
+    modal.id = 'redeemModal';
+    modal.className = 'pin-modal redeem-modal';
+    modal.innerHTML =
+      '<div class="pin-modal-card redeem-modal-card">' +
+        '<div class="pin-modal-icon">&#x1F381;</div>' +
+        '<h3 class="pin-modal-title">Redeem Points</h3>' +
+        '<p class="pin-modal-desc">You have <strong>' + pts + '</strong> points</p>' +
+        '<input type="password" id="redeemPin" class="pin-input" maxlength="20" placeholder="Parent password" autocomplete="off">' +
+        '<input type="number" id="redeemAmount" class="pin-input" min="1" max="' + pts + '" placeholder="Points to redeem">' +
+        '<div class="pin-error hidden" id="redeemError"></div>' +
+        '<button class="btn btn-primary pin-submit-btn" id="redeemSubmitBtn">Redeem</button>' +
+        '<button class="btn btn-ghost pin-skip-btn" id="redeemCancelBtn">Cancel</button>' +
+      '</div>';
+    document.body.appendChild(modal);
+
+    var pinInput = $('redeemPin');
+    var amtInput = $('redeemAmount');
+    var submitBtn = $('redeemSubmitBtn');
+    var cancelBtn = $('redeemCancelBtn');
+    var errorEl = $('redeemError');
+
+    function doRedeem() {
+      var pin = pinInput.value.trim();
+      var amount = parseInt(amtInput.value);
+      if (!pin) return;
+      if (isNaN(amount) || amount <= 0) {
+        errorEl.textContent = 'Enter a valid amount';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
+      errorEl.classList.add('hidden');
+
+      var endpoint = typeof _cloudEndpoint !== 'undefined' ? _cloudEndpoint : 'https://mametchi-ai-proxy.tincomking.workers.dev';
+      fetch(endpoint + '/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: typeof AI_CONFIG !== 'undefined' ? AI_CONFIG.sessionToken : '',
+          parentPin: pin,
+          amount: amount
+        })
+      }).then(function(res) {
+        return res.json().then(function(data) {
+          if (!res.ok) throw new Error(data.error || 'Redeem failed');
+          return data;
+        });
+      }).then(function(data) {
+        state.progress.points = data.points;
+        saveProgress(state.progress);
+        refreshPointsUI();
+        modal.classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Redeem';
+      }).catch(function(err) {
+        errorEl.textContent = err.message || 'Redeem failed';
+        errorEl.classList.remove('hidden');
+        pinInput.value = '';
+        pinInput.focus();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Redeem';
+      });
+    }
+
+    submitBtn.addEventListener('click', doRedeem);
+    amtInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') doRedeem(); });
+    cancelBtn.addEventListener('click', function() { modal.classList.add('hidden'); });
+    pinInput.focus();
   }
 
   // =========================================================================

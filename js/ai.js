@@ -354,6 +354,14 @@ function showPINModal() {
         modal.classList.add('hidden');
         submitBtn.disabled = false;
         submitBtn.textContent = 'Unlock';
+        // Sync cloud progress after login
+        if (typeof fetchCloudProgress === 'function') {
+          fetchCloudProgress().then(function(cloudData) {
+            if (cloudData) {
+              window.dispatchEvent(new Event('progressSynced'));
+            }
+          });
+        }
       })
       .catch(function(err) {
         errorEl.textContent = err.message || 'Wrong username or password';
