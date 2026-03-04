@@ -44,7 +44,10 @@
       Whiteboard.init();
     }
 
-    // Init AI session (show PIN modal if endpoint configured but no session)
+    // Configure AI endpoint and init session
+    if (typeof configureAI === 'function') {
+      configureAI('https://mametchi-ai-proxy.tincomking.workers.dev');
+    }
     if (typeof initAISession === 'function') {
       initAISession();
     }
