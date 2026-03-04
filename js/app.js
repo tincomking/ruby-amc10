@@ -44,6 +44,11 @@
       Whiteboard.init();
     }
 
+    // Init AI session (show PIN modal if endpoint configured but no session)
+    if (typeof initAISession === 'function') {
+      initAISession();
+    }
+
     // Pre-load exam index in background
     if (typeof ExamMode !== 'undefined') {
       ExamMode.loadExamIndex().then(function() {
@@ -475,7 +480,7 @@
     setDialog(isCorrect ? "Great job! Here's how it works:" : "Let me walk you through this step by step!");
 
     // Try AI-powered detailed explanation first, fallback to local split
-    if (typeof fetchDetailedExplanation === 'function' && isAIAvailable()) {
+    if (typeof fetchDetailedExplanation === 'function' && isAIAvailable() && hasValidSession()) {
       setDialog(isCorrect ? "Great job! Let me show you the solution..." : "Let me think about how to explain this...");
       fetchDetailedExplanation(problem, isCorrect)
         .then(function(aiSteps) {

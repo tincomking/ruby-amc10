@@ -1,0 +1,8 @@
+name = "mametchi-ai-proxy"
+main = "api-proxy.js"
+compatibility_date = "2024-01-01"
+
+# Secrets (set via: wrangler secret put <NAME>)
+# ANTHROPIC_API_KEY  - your Anthropic API key
+# PIN_HASH           - SHA-256 hex of the PIN: echo -n "yourpin" | shasum -a 256
+# HMAC_SECRET        - any long random string for signing tokens

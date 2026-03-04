@@ -2755,6 +2755,94 @@ body::before {
   background: #FEFEFE;
 }
 
+/* ----------------------------- PIN Login Modal ----------------------------- */
+.pin-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 42, 74, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--space-lg);
+}
+
+.pin-modal.hidden {
+  display: none !important;
+}
+
+.pin-modal-card {
+  background: var(--bg-card);
+  border-radius: var(--r-2xl);
+  padding: var(--space-2xl) var(--space-xl);
+  box-shadow: var(--shadow-xl);
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  animation: card-slide-down 0.3s var(--ease-out);
+}
+
+.pin-modal-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+}
+
+.pin-modal-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.pin-modal-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.pin-input {
+  width: 100%;
+  padding: 14px 18px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 8px;
+  text-align: center;
+  border: 2px solid rgba(27, 42, 74, 0.12);
+  border-radius: var(--r-lg);
+  background: var(--bg-warm);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.pin-input:focus {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15);
+}
+
+.pin-error {
+  color: var(--coral);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: var(--space-sm);
+  animation: shake-wrong 0.4s ease;
+}
+
+.pin-submit-btn {
+  width: 100%;
+  margin-top: var(--space-md);
+}
+
+.pin-skip-btn {
+  width: 100%;
+  margin-top: var(--space-sm);
+  font-size: 13px;
+}
+
 /* ----------------------------- Geo Diagram Animations ----------------------------- */
 .geo-diagram {
   width: 100%;

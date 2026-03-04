@@ -1,12 +1,17 @@
-// Claude API Integration via Cloudflare Worker Proxy
+// Claude API Integration via Cloudflare Worker with PIN Authentication
+//
+// Security: API key is on Worker (server-side), browser only holds
+// a time-limited session token obtained via PIN login.
 
 var AI_CONFIG = {
-  // Cloudflare Worker endpoint - update after deploying the worker
+  // Cloudflare Worker endpoint - set via configureAI()
   endpoint: '',
-  authToken: '',
   enabled: false,
   available: true,
-  retryAfter: 0
+  retryAfter: 0,
+  // Session
+  sessionToken: null,
+  sessionExpires: 0
 };
 
 var SYSTEM_PROMPT = [
@@ -49,21 +54,117 @@ var SYSTEM_PROMPT = [
   '}'
 ].join('\n');
 
-// Configure AI (call once with your worker URL and token)
-function configureAI(endpoint, authToken) {
+// ---- Configuration ----
+
+function configureAI(endpoint) {
   AI_CONFIG.endpoint = endpoint;
-  AI_CONFIG.authToken = authToken;
-  AI_CONFIG.enabled = !!(endpoint && authToken);
+  AI_CONFIG.enabled = !!endpoint;
+  // Try to restore session from localStorage
+  try {
+    var saved = localStorage.getItem('mametchi_session');
+    if (saved) {
+      var session = JSON.parse(saved);
+      if (session.token && session.expires > Date.now()) {
+        AI_CONFIG.sessionToken = session.token;
+        AI_CONFIG.sessionExpires = session.expires;
+      } else {
+        localStorage.removeItem('mametchi_session');
+      }
+    }
+  } catch (e) { /* ignore */ }
 }
 
-// Check if AI is available
+// ---- Session / Auth ----
+
 function isAIAvailable() {
   return AI_CONFIG.enabled && AI_CONFIG.available && Date.now() > AI_CONFIG.retryAfter;
 }
 
-// Fetch a problem from AI
+function hasValidSession() {
+  return AI_CONFIG.sessionToken && AI_CONFIG.sessionExpires > Date.now();
+}
+
+function loginWithPIN(pin) {
+  if (!AI_CONFIG.endpoint) {
+    return Promise.reject(new Error('AI not configured'));
+  }
+
+  return fetch(AI_CONFIG.endpoint + '/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pin: pin })
+  }).then(function(res) {
+    return res.json().then(function(data) {
+      if (!res.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+      // Save session
+      AI_CONFIG.sessionToken = data.token;
+      AI_CONFIG.sessionExpires = Date.now() + (data.expiresIn || 86400000);
+      try {
+        localStorage.setItem('mametchi_session', JSON.stringify({
+          token: data.token,
+          expires: AI_CONFIG.sessionExpires
+        }));
+      } catch (e) { /* ignore */ }
+      return data;
+    });
+  });
+}
+
+function logout() {
+  AI_CONFIG.sessionToken = null;
+  AI_CONFIG.sessionExpires = 0;
+  try { localStorage.removeItem('mametchi_session'); } catch (e) { /* ignore */ }
+}
+
+// ---- Core API call (with session token) ----
+
+function callClaudeAPI(systemPrompt, messages) {
+  if (!hasValidSession()) {
+    return Promise.reject(new Error('No valid session'));
+  }
+
+  return fetch(AI_CONFIG.endpoint + '/api', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      token: AI_CONFIG.sessionToken,
+      system: systemPrompt,
+      messages: messages
+    })
+  }).then(function(res) {
+    if (!res.ok) {
+      if (res.status === 401) {
+        // Session expired
+        logout();
+        showPINModal();
+      }
+      if (res.status === 429) {
+        AI_CONFIG.retryAfter = Date.now() + 60000;
+      }
+      throw new Error('API error: ' + res.status);
+    }
+    return res.json();
+  }).then(function(data) {
+    if (data.content && data.content[0] && data.content[0].text) {
+      return data.content[0].text;
+    }
+    throw new Error('Unexpected API response format');
+  }).catch(function(err) {
+    console.warn('AI API error:', err);
+    if (err.message.indexOf('401') === -1) {
+      AI_CONFIG.available = false;
+      setTimeout(function() { AI_CONFIG.available = true; }, 60000);
+    }
+    throw err;
+  });
+}
+
+// ---- Problem generation ----
+
 function fetchProblemFromAI(topic, subtopic, difficulty, recentContext) {
-  if (!isAIAvailable()) {
+  if (!isAIAvailable() || !hasValidSession()) {
     return Promise.reject(new Error('AI not available'));
   }
 
@@ -84,9 +185,8 @@ function fetchProblemFromAI(topic, subtopic, difficulty, recentContext) {
     });
 }
 
-// Fetch a follow-up problem after wrong answer
 function fetchFollowUpFromAI(originalProblem) {
-  if (!isAIAvailable()) {
+  if (!isAIAvailable() || !hasValidSession()) {
     return Promise.reject(new Error('AI not available'));
   }
 
@@ -105,43 +205,10 @@ function fetchFollowUpFromAI(originalProblem) {
     });
 }
 
-// Core API call
-function callClaudeAPI(systemPrompt, messages) {
-  return fetch(AI_CONFIG.endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Auth-Token': AI_CONFIG.authToken
-    },
-    body: JSON.stringify({
-      system: systemPrompt,
-      messages: messages
-    })
-  }).then(function(res) {
-    if (!res.ok) {
-      if (res.status === 429) {
-        AI_CONFIG.retryAfter = Date.now() + 60000;
-      }
-      throw new Error('API error: ' + res.status);
-    }
-    return res.json();
-  }).then(function(data) {
-    if (data.content && data.content[0] && data.content[0].text) {
-      return data.content[0].text;
-    }
-    throw new Error('Unexpected API response format');
-  }).catch(function(err) {
-    console.warn('AI API error:', err);
-    AI_CONFIG.available = false;
-    setTimeout(function() { AI_CONFIG.available = true; }, 60000);
-    throw err;
-  });
-}
+// ---- Detailed explanation (progressive hints) ----
 
-// Fetch detailed step-by-step explanation from AI
-// Returns an array of hint-like progressive steps
 function fetchDetailedExplanation(problem, isCorrect) {
-  if (!isAIAvailable()) {
+  if (!isAIAvailable() || !hasValidSession()) {
     return Promise.reject(new Error('AI not available'));
   }
 
@@ -195,9 +262,9 @@ function fetchDetailedExplanation(problem, isCorrect) {
     });
 }
 
-// Parse and validate AI response
+// ---- Parse AI response ----
+
 function parseAIProblem(responseText, topic, subtopic, difficulty) {
-  // Try to extract JSON from response (handle code fences)
   var jsonStr = responseText.trim();
   var fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fenceMatch) jsonStr = fenceMatch[1].trim();
@@ -209,7 +276,6 @@ function parseAIProblem(responseText, topic, subtopic, difficulty) {
     throw new Error('Invalid JSON from AI');
   }
 
-  // Validate required fields
   if (!data.problem || !data.choices || !data.correctAnswer || !data.solution) {
     throw new Error('Missing required fields in AI response');
   }
@@ -239,4 +305,77 @@ function parseAIProblem(responseText, topic, subtopic, difficulty) {
     mametchiWrong: data.mametchiWrong || getRandomWrong(),
     source: 'ai'
   };
+}
+
+// ---- PIN Modal UI ----
+
+function showPINModal() {
+  var existing = document.getElementById('pinModal');
+  if (existing) {
+    existing.classList.remove('hidden');
+    var input = document.getElementById('pinInput');
+    if (input) { input.value = ''; input.focus(); }
+    return;
+  }
+
+  var modal = document.createElement('div');
+  modal.id = 'pinModal';
+  modal.className = 'pin-modal';
+  modal.innerHTML =
+    '<div class="pin-modal-card">' +
+      '<div class="pin-modal-icon">🔐</div>' +
+      '<h3 class="pin-modal-title">Enter PIN</h3>' +
+      '<p class="pin-modal-desc">PIN to unlock Mametchi\'s AI brain</p>' +
+      '<input type="password" id="pinInput" class="pin-input" maxlength="20" placeholder="••••" autocomplete="off" inputmode="numeric">' +
+      '<div class="pin-error hidden" id="pinError"></div>' +
+      '<button class="btn btn-primary pin-submit-btn" id="pinSubmitBtn">Unlock</button>' +
+      '<button class="btn btn-ghost pin-skip-btn" id="pinSkipBtn">Skip (offline mode)</button>' +
+    '</div>';
+
+  document.body.appendChild(modal);
+
+  var input = document.getElementById('pinInput');
+  var submitBtn = document.getElementById('pinSubmitBtn');
+  var skipBtn = document.getElementById('pinSkipBtn');
+  var errorEl = document.getElementById('pinError');
+
+  function doLogin() {
+    var pin = input.value.trim();
+    if (!pin) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Checking...';
+    errorEl.classList.add('hidden');
+
+    loginWithPIN(pin)
+      .then(function() {
+        modal.classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Unlock';
+      })
+      .catch(function(err) {
+        errorEl.textContent = err.message || 'Wrong PIN';
+        errorEl.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Unlock';
+      });
+  }
+
+  submitBtn.addEventListener('click', doLogin);
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+  skipBtn.addEventListener('click', function() {
+    modal.classList.add('hidden');
+  });
+
+  input.focus();
+}
+
+function initAISession() {
+  // Only show PIN modal if AI endpoint is configured but no valid session
+  if (AI_CONFIG.enabled && !hasValidSession()) {
+    showPINModal();
+  }
 }
