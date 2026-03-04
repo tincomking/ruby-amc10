@@ -20,6 +20,7 @@
     solutionSteps: [],
     currentStep: 0,
     allStepsShown: false,
+    explanationIsCorrect: false,
     // Exam mode
     examLoaded: false,
     examActive: false,
@@ -37,6 +38,11 @@
     updateDailyStatsDisplay();
     updateProgressBars();
     updateSessionStats();
+
+    // Init whiteboard
+    if (typeof Whiteboard !== 'undefined') {
+      Whiteboard.init();
+    }
 
     // Pre-load exam index in background
     if (typeof ExamMode !== 'undefined') {
@@ -263,6 +269,12 @@
     state.solutionSteps = [];
     state.currentStep = 0;
     state.allStepsShown = false;
+    state.explanationIsCorrect = false;
+
+    // Clear whiteboard
+    if (typeof Whiteboard !== 'undefined') {
+      Whiteboard.clear();
+    }
 
     // Reset UI
     setMametchiState('problemMametchi', 'thinking');
@@ -435,38 +447,11 @@
   function handleCorrect(problem) {
     state.phase = 'correct';
     setMametchiState('problemMametchi', 'happy');
-    typeDialog(problem.mametchiCorrect || "Amazing! You got it right!");
-
-    removeClass('solutionCard', 'hidden');
-    var header = $('solutionHeader');
-    if (header) {
-      header.textContent = 'Correct!';
-      header.className = 'solution-header correct';
-    }
-
-    var solutionText = problem.solution || '';
-    if (problem.solutions && problem.solutions.length > 0) {
-      solutionText = problem.solutions[0].text || solutionText;
-    }
-
-    // Show simple text, hide steps
-    var textEl = $('solutionText');
-    if (textEl) {
-      textEl.textContent = solutionText;
-      renderMathIn(textEl);
-      textEl.style.display = 'block';
-    }
-    var stepsEl = $('solutionSteps');
-    if (stepsEl) stepsEl.style.display = 'none';
-
-    var nextBtn = $('nextBtn');
-    if (nextBtn) {
-      nextBtn.textContent = 'Next Problem';
-      nextBtn.style.display = 'inline-block';
-    }
-
-    var answerSection = $('answerSection');
-    if (answerSection) answerSection.style.display = 'none';
+    typeDialog(problem.mametchiCorrect || "Amazing! You got it right!").then(function() {
+      setTimeout(function() {
+        showStepByStepExplanation(problem, true);
+      }, 600);
+    });
   }
 
   function handleWrong(problem) {
@@ -483,10 +468,11 @@
   // =========================================================================
   // STEP-BY-STEP ANIMATED EXPLANATION
   // =========================================================================
-  function showStepByStepExplanation(problem) {
+  function showStepByStepExplanation(problem, isCorrect) {
     state.phase = 'explaining';
-    setMametchiState('problemMametchi', 'teaching');
-    setDialog("Let me walk you through this step by step!");
+    state.explanationIsCorrect = !!isCorrect;
+    setMametchiState('problemMametchi', isCorrect ? 'happy' : 'teaching');
+    setDialog(isCorrect ? "Great job! Here's how it works:" : "Let me walk you through this step by step!");
 
     var solutionText = problem.solution || '';
     if (problem.solutions && problem.solutions.length > 0) {
@@ -502,8 +488,8 @@
 
     var header = $('solutionHeader');
     if (header) {
-      header.textContent = "Let's learn from this!";
-      header.className = 'solution-header wrong';
+      header.textContent = isCorrect ? 'Solution Walkthrough' : "Let's learn from this!";
+      header.className = 'solution-header ' + (isCorrect ? 'correct' : 'wrong');
     }
 
     // Hide plain text
@@ -515,6 +501,17 @@
     if (stepsEl) {
       stepsEl.innerHTML = '';
       stepsEl.style.display = 'block';
+
+      // Insert geometry diagram if applicable
+      if (typeof GeoDiagram !== 'undefined' && problem.topic === 'geometry') {
+        var svgStr = GeoDiagram.generate(problem);
+        if (svgStr) {
+          var diagramWrap = document.createElement('div');
+          diagramWrap.className = 'geo-diagram-wrap';
+          diagramWrap.innerHTML = svgStr;
+          stepsEl.appendChild(diagramWrap);
+        }
+      }
 
       for (var i = 0; i < steps.length; i++) {
         var stepDiv = document.createElement('div');
@@ -538,17 +535,16 @@
       revealStep(0);
     }
 
-    // Update the next button to act as "Next Step" when there are multiple steps
+    // Update the next button
     var nextBtn = $('nextBtn');
     if (nextBtn) {
       if (steps.length > 1) {
         nextBtn.textContent = 'Next Step \u2192';
         nextBtn.style.display = 'inline-block';
-        // Temporarily rebind to step advancement
         nextBtn._stepMode = true;
       } else {
         state.allStepsShown = true;
-        nextBtn.textContent = "Got it! Let's try a similar one";
+        nextBtn.textContent = isCorrect ? 'Next Problem' : "Got it! Let's try a similar one";
         nextBtn.style.display = 'inline-block';
         nextBtn._stepMode = false;
       }
@@ -578,11 +574,13 @@
       state.allStepsShown = true;
       var nextBtn = $('nextBtn');
       if (nextBtn) {
-        nextBtn.textContent = "Got it! Let's try a similar one";
+        nextBtn.textContent = state.explanationIsCorrect ? 'Next Problem' : "Got it! Let's try a similar one";
         nextBtn._stepMode = false;
       }
-      setMametchiState('problemMametchi', 'encourage');
-      setDialog("Take your time to understand each step. When you're ready, let's try a similar one!");
+      setMametchiState('problemMametchi', state.explanationIsCorrect ? 'happy' : 'encourage');
+      setDialog(state.explanationIsCorrect
+        ? "Nice work! Ready for the next one?"
+        : "Take your time to understand each step. When you're ready, let's try a similar one!");
       return;
     }
 
@@ -664,8 +662,8 @@
       return;
     }
 
-    // If the previous answer was wrong, try a follow-up
-    if (state.phase === 'explaining' && state.originalProblem && !state.isFollowUp) {
+    // If the previous answer was wrong, try a follow-up (skip for correct answers)
+    if (state.phase === 'explaining' && state.originalProblem && !state.isFollowUp && !state.explanationIsCorrect) {
       loadFollowUp();
       return;
     }
